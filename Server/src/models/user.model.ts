@@ -1,84 +1,110 @@
 import mongoose, { Schema, Model } from 'mongoose';
 import type { IUserDocument } from '../types/user.type';
 import type { JsonTransformReturnType } from '../types/common';
-import { ROLES, GENDER } from 
+import { ROLES, GENDER } from '../constants/constants';
+import { IDGenerator } from '../utils/idGenerator.utils';
 
 
-export interface IAddress {
-  _id?: Types.ObjectId;
-  addressLine1: string;
-  city: string;
-  state: string;
-  country: string;
-  pinCode: string;
-  addressType: 'home' | 'work';
-  isDefault: boolean;
-}
-
-export interface IUser extends Document {
-  LName: string;
-  FName: string;
-  DateOfBirth: string;
-  PhoneNo: string;
-  BloodGroup: string;
-  Password: string;
-  Gender: string;
-  PImage?: string;
-  IsActive: boolean;
-  Role: string;
-  Email: string;
-  resetPasswordOtp?: string | null;
-  resetPasswordOtpExpiresAt?: Date | null;
-  addresses?: IAddress[];
-  PImagePublicId?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-const AddressSchema = new Schema<IAddress>(
+const UserSchema = new Schema<IUserDocument>(
   {
-    addressLine1: { type: String, required: true, trim: true },
-    city: { type: String, required: true, trim: true },
-    state: { type: String, required: true, trim: true },
-    country: { type: String, required: true, trim: true },
-    pinCode: { type: String, required: true, trim: true },
-    addressType: { type: String, enum: ['home', 'work'], required: true },
-    isDefault: { type: Boolean, default: false },
-  },
-  {_id: true}
-)
-
-const UserSchema: Schema<IUser> = new Schema<IUser>(
-  {
-    LName: { type: String, required: true },
-    FName: { type: String, required: true },
-    DateOfBirth: { type: String, required: true },
-    PhoneNo: { type: String, required: true },
-    BloodGroup: { type: String, required: true },
-    Password: { type: String, required: true },
-    Gender: { type: String, required: true },
-    PImage: { type: String, default: "" },
-    PImagePublicId: { type: String, default: '' },
-    IsActive: { type: Boolean, default: true },
-    Role: { type: String, default: 'user' },
-    Email: {
+    customId: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true,
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
       trim: true,
     },
-    resetPasswordOtp: { type: String, default: null },
-    resetPasswordOtpExpiresAt: { type: Date, default: null },
-    addresses: { type: [AddressSchema], default: [] },
+    phone: {
+      type: String,
+      trim: true,
+      index: true,
+      sparse: true,
+    },
+    passwordHash: {
+      type: String,
+      required: true,
+    },
+    googleId: {
+      type: String,
+    },
+    role: {
+      type: String,
+      enum: Object.values(ROLES),
+      default: ROLES.PATIENT,
+      required: true
+    },
+    gender: {
+      type: String,
+      enum: Object.values(GENDER),
+      default: null,
+    },
+    dob: {
+      type: Date,
+      default: null
+    },
+    profileImage: {
+      type: String,
+      default: null,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    favorite: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Doctor",
+      },
+    ],
   },
+
   {
     timestamps: true,
-  },
+    toJSON: {
+      virtuals: true,
+      transform(_doc, ret: Record<string, unknown>): JsonTransformReturnType {
+
+        const { _id, __v, passwordHash, ...cleanedRet } = ret;
+
+        return {
+          ...cleanedRet,
+          id: _id as string,
+        };
+      },
+    },
+    toObject: { virtuals: true },
+  }    
 );
 
-interface IUserModel extends Model<IUser> {}
+UserSchema.index({ role: 1, isActive: 1 });
 
-const User: IUserModel = mongoose.model<IUser, IUserModel>('User', UserSchema);
+UserSchema.pre('save',async function(){
+  if (this.isNew && !this.customId) {
+    if (this.role === ROLES.PATIENT) {
+      this.customId = IDGenerator.generatePatientID()
+    } else if (this.role === ROLES.DOCTOR) {
+      this.customId = IDGenerator.generateDoctorID();
+    } else if (this.role === ROLES.ADMIN) {
 
-export default User;
+      this.customId = IDGenerator.generatePatientID()
+    }
+  }
+});
+
+
+const UserModel: Model<IUserDocument> =
+  (mongoose.models && (mongoose.models.User as Model<IUserDocument>)) ||
+  mongoose.model<IUserDocument>("User", UserSchema);
+
+export default UserModel;

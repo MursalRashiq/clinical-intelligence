@@ -5,7 +5,7 @@ dotenv.config();
 export const env = {
 
     get MONGODB_URI() {
-        return process.env.MONGODB_URI || '';
+        return process.env.MONGO_URI || '';
     },
 
     get PORT() {
@@ -14,5 +14,41 @@ export const env = {
 
     get NODE_ENV() {
         return process.env.NODE_ENV || 'development';
+    },
+
+    get ACCESS_TOKEN_SECRET() {
+        return process.env.ACCESS_TOKEN_SECRET || '';
+    },
+
+    get REFRESH_TOKEN_SECRET() {
+        return process.env.REFRESH_TOKEN_SECRET || '';
+    },
+
+    get REFRESH_TOKEN_MAX_AGE() {
+        return Number(process.env.REFRESH_TOKEN_MAX_AGE);
+    },
+
+    get SESSION_MAX_AGE() {
+        return Number(process.env.SESSION_MAX_AGE);
+    },
+
+    get SMTP_HOST() {
+        return process.env.SMTP_HOST || "";
+    },
+
+    get SMTP_PORT() {
+        return process.env.SMTP_PORT || "";
+    },
+
+    get SMTP_USER() {
+        return process.env.SMTP_USER || "";
+    },
+
+    get SMTP_PASS() {
+        return process.env.SMTP_PASS || "";
+    },
+
+    get SESSION_SECRET() {
+        return process.env.SESSION_SECRET;
     }
 }

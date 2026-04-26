@@ -1,0 +1,91 @@
+import fs from 'fs';
+import path from 'path';
+import type { ILoggerService } from '../interface/ILogger.service';
+import { debug, info } from 'console';
+
+export class LoggerService implements ILoggerService {
+    private readonly _context: string;
+    private readonly _logsDir: string;
+    private readonly _logFile: string;
+    private readonly _errorFile: string;
+
+    constructor( context: string = "Application") {
+        this._context = context;
+        this._logsDir = path.join(process.cwd(), "logs");
+        this._logFile = path.join(process.cwd(), "app.logs");
+        this._errorFile = path.join(this._logsDir, "error.log");
+        this._ensureLogsDir();
+    }
+
+    private _ensureLogsDir(): void {
+        if(!fs.existsSync(this._logsDir)){
+            fs.mkdirSync(this._logsDir, { recursive: true });
+        }
+    }
+
+    private _writeToFile(level: string, message: string, meta?: Record<string, unknown> | unknown): void {
+        const timestamp = new Date().toISOString();
+        const logEntry = `[${timestamp}] [${level}] [${this._context}] ${message} ${meta ? JSON.stringify(meta): ""}\n`
+
+        fs.appendFile(this._logFile, logEntry, (err) => {
+            if (err) {
+                process.stderr.write(`Failed to write to app.log: ${String(err)}\n`)
+            }
+        });
+
+        if (level === "ERROR") {
+            fs.appendFile(this._errorFile, logEntry, (err) => {
+                if (err) {
+                    process.stderr.write(`Failed to write to error.log: ${String(err)}\n`)
+                }
+            });
+        }
+    }
+
+    private _writeToConsole(line: string, meta?: Record<string, unknown>): void {
+        const metaText = meta ? `${JSON.stringify(meta, null, 2)}`: "";
+        process.stdout.write(`${line}${metaText}\n`)
+    }
+
+    private _writeToStderr(line: string): void {
+        process.stderr.write(`${line}\n`);
+    }
+
+    info(message: string, meta?: Record<string, unknown>): void {
+        const timestamp = new Date().toISOString();
+        this._writeToConsole(`[${timestamp}] [INFO] [${this._context}] ${message}`, meta);
+    }
+
+    error(message: string, error?: Error | unknown, meta?: Record<string, unknown>): void {
+        const timestamp = new Date().toISOString();
+        this._writeToStderr(`[${timestamp}] [ERROR] [${this._context}] ${message}`);
+
+        let errorDetails = "";
+        if (error instanceof Error) {
+            this._writeToStderr(`Stack: ${error.stack}`);
+            errorDetails = `Stack: ${error.stack}`;
+        }else if (error) {
+            errorDetails = `Error: ${JSON.stringify(error)}`;
+            this._writeToStderr(`Error details: ${errorDetails}`);
+        }
+
+        if (meta) {
+            this._writeToStderr(`Meta: ${JSON.stringify(meta, null, 2)}`);
+        }
+
+    }
+
+    warn(message: string, meta?: Record<string, unknown>): void {
+        const timestamp = new Date().toISOString();
+        this._writeToConsole(`[${timestamp}] [WARN] [${this._context}] ${message}`, meta);
+    }
+
+    debug(message: string, meta?: Record<string, unknown>): void {
+        const timestamp = new Date().toISOString();
+        if (process.env.NODE_ENV === "development") {
+            this._writeToConsole(`[${timestamp}] [DEBUG] [${this._context}] ${message}`, meta);
+        }
+        this._writeToFile("DEBUG", message, meta);
+    }
+
+}
