@@ -6,9 +6,11 @@ import morgan from "morgan";
 import { env } from "./config/env";
 import cookieParser from "cookie-parser";
 import session from 'express-session';
+import cors from 'cors'
 
 
-import authRouter from './routes/auth.router'
+import authRouter from './routes/auth.router';
+import adminRouter from './routes/admin.route'
 import { CONFIG } from "./constants/constants";
 import { BASE_ROUTES } from "./constants/routes.constants";
 
@@ -23,6 +25,25 @@ if (!sessionSecret) {
 connectDB();
 const app = express()
 
+const corsOptions = {
+  origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+
+    if (!requestOrigin) return callback(null, true);
+
+    const allowedOrigins = [env.CLIENT_URL, env.CLIENT_URL_1, env.CLIENT_URL_2];
+
+    if (allowedOrigins.includes(requestOrigin)) {
+      return callback(null, true);
+    } else {
+      // console.log(`[API CORS] Blocked Origin: ${requestOrigin}`);
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 app.use(morgan('dev'))
 app.use(cookieParser())
 app.use(express.json({ limit: "50mb"}))
@@ -50,7 +71,8 @@ app.get("/", (req, res) => {
     })
 })
 
-app.use(BASE_ROUTES.AUTH, authRouter)
+app.use(BASE_ROUTES.AUTH, authRouter);
+app.use(BASE_ROUTES.ADMIN, adminRouter);
 
 
 const PORT = env.PORT;

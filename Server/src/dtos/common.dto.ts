@@ -80,5 +80,5 @@ export interface ChangePasswordDTO {
 export interface AuthResponseDTO<T = BaseUserResponseDTO> {
     user: T;
     token: string;
-    refreshToken: string;
+    refreshToken?: string;
 }

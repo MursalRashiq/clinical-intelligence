@@ -99,4 +99,10 @@ export const MESSAGES = {
     NO_ACCOUNT_FOUND: "No account found with this email address.",
     USER_NOT_ACTIVE: "Your account is not active. Please contact support.",
     USER_NOT_FOUND: "User not found.",
+    EMAIL_PASSWORD_REQUIRED: 'Email and Password required',
+    PATIENT_UNBLOCKED_SUCCESS: "Patient unblocked successfully",
+    PATIENT_BLOCKED_SUCCESS: "Patient blocked successfully",
+    PATIENT_NOT_FOUND: "Patient Not found",
+    AUTH_FAILED: "authentication_failed",
+
 };  

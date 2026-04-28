@@ -103,17 +103,17 @@ export class EmailService implements IEmailService {
     const expiryText = `${CONFIG.OTP_EXPIRY_TIME} minute${CONFIG.OTP_EXPIRY_TIME === 1 ? "" : "s"}`;
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 10px;">
-        <div style="background-color: #14b8a6; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">TakeCare</h1>
+        <div style="background-color: #1560e8; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">Clinical Intelligence</h1>
         </div>
         
         <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px;">
-          <h2 style="color: #14b8a6; margin-top: 0;">Welcome, ${name}!</h2>
+          <h2 style="color: #1560e8; margin-top: 0;">Welcome, ${name}!</h2>
           <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
-            Thank you for registering with TakeCare. To complete your registration, please use the following OTP:
+            Thank you for registering with Clinical Intelligence. To complete your registration, please use the following OTP:
           </p>
           
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0891b2 100%); margin: 30px 0; padding: 20px; text-align: center; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="background: linear-gradient(135deg, #1560e8 0%, #0d4bc4 100%); margin: 30px 0; padding: 20px; text-align: center; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: white; font-family: 'Courier New', monospace;">
               ${otp}
             </div>
@@ -134,7 +134,7 @@ export class EmailService implements IEmailService {
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
           
           <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-            © 2025 TakeCare. All rights reserved.
+            © 2025 Clinical Intelligence. All rights reserved.
           </p>
         </div>
       </div>
@@ -146,12 +146,12 @@ export class EmailService implements IEmailService {
     const expiryText = `${CONFIG.OTP_EXPIRY_TIME} minute${CONFIG.OTP_EXPIRY_TIME === 1 ? "" : "s"}`;
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 10px;">
-        <div style="background-color: #14b8a6; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">TakeCare</h1>
+        <div style="background-color: #1560e8; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">Clinical Intelligence</h1>
         </div>
         
         <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px;">
-          <h2 style="color: #14b8a6; margin-top: 0;">Password Reset Request</h2>
+          <h2 style="color: #1560e8; margin-top: 0;">Password Reset Request</h2>
           <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
             Hello <strong>${name}</strong>,
           </p>
@@ -159,7 +159,7 @@ export class EmailService implements IEmailService {
             We received a request to reset your password. Please use the following OTP to continue:
           </p>
           
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0891b2 100%); margin: 30px 0; padding: 20px; text-align: center; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="background: linear-gradient(135deg, #1560e8 0%, #0d4bc4 100%); margin: 30px 0; padding: 20px; text-align: center; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
             <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: white; font-family: 'Courier New', monospace;">
               ${otp}
             </div>
@@ -180,7 +180,7 @@ export class EmailService implements IEmailService {
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
           
           <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-            © 2025 TakeCare. All rights reserved.
+            © 2025 Clinical Intelligence. All rights reserved.
           </p>
         </div>
       </div>

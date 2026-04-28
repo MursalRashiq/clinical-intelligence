@@ -25,3 +25,12 @@ export const AUTH_ROUTES = {
     CHANGE_PASSWORD: "/change-password",
     REFRESH_TOKEN: "/refresh-token",
 } as const;
+
+export const ADMIN_ROUTES = {
+    LOGIN: "/login",
+
+    ALL_PATIENTS: "/patients",
+    PATIENT_BY_ID: "/patients/:patientId",
+    PATIENT_BLOCK: "/patients/:patientId/block",
+    PATIENT_UNBLOCK: "/patients/:patientId/unblock",
+} as const;

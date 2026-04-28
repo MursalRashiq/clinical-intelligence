@@ -35,5 +35,15 @@ router.post(AUTH_ROUTES.RESEND_OTP, validate(AuthValidator.validateResendOtpInpu
 router.post(AUTH_ROUTES.LOGIN, validate(AuthValidator.validateLoginInput), authController.login)
 router.post(AUTH_ROUTES.LOGOUT, authController.logout)
 
+router.post(AUTH_ROUTES.FORGOT_PASSWORD, validate(AuthValidator.validateForgotPasswordInput), authController.forgotPassword);
+router.post(AUTH_ROUTES.FORGOT_PASSWORD_VERIFY_OTP, validate(AuthValidator.validateForgotPasswordVerifyOtpInput), authController.forgotPasswordVerify);
+router.post(AUTH_ROUTES.RESET_PASSWORD, validate(AuthValidator.validateForgotPasswordInput), authController.resetPassword);
+
+router.post(AUTH_ROUTES.CHANGE_PASSWORD, authMiddleware, authController.changePassword)
+
+router.post(AUTH_ROUTES.REFRESH_TOKEN, authController.refreshToken)
+
+router.get(AUTH_ROUTES.LOGOUT, authController.logout)
+
 
 export default router;

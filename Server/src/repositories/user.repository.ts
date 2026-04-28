@@ -47,7 +47,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
         })
     }
 
-    async getAllPatients(skip: number, limit: number, filter?: { search?: string; isActive?: boolean }): Promise<{ users: IUserDocument[]; total: number }> {
+    async getAllPatients(skip: number, limit: number, filter?: { search?: string; isActive?: boolean }): Promise<{ patients: IUserDocument[]; total: number }> {
     const query: Record<string, unknown> = { role: ROLES.PATIENT };
 
     if (filter) {
@@ -71,7 +71,7 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
       .limit(limit)
       .sort({ createdAt: -1 });
     const total = await this.model.countDocuments(query);
-    return { users: patients, total };
+    return { patients, total };
   }
 
     async existsByField(fieldName: string, value: unknown): Promise<boolean> {

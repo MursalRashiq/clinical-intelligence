@@ -17,12 +17,14 @@ export class OTPService implements IOtpService {
     async createAndSendOtp(email: string, name: string, userData: OTPUserData, expiryMinutes: number = 1): Promise<string> {
         const otp = generateOTP(6);
         this._logger.debug("OTP generated", { email });
-        const expiresAt = getOtpExpiry(expiryMinutes);
+        const otpExpiresAt = getOtpExpiry(expiryMinutes);
+        const expiresAt = getOtpExpiry(30); // MongoDB TTL (30 minutes)
 
         await this._otpRepository.create({
             email,
             otp,
             userData,
+            otpExpiresAt,
             expiresAt,
         });
 
@@ -37,8 +39,8 @@ export class OTPService implements IOtpService {
             throw new AppError(MESSAGES.OTP_INVALID_OR_EXPIRED, HttpStatus.GONE);
         }
 
-        if(isOtpExpirted(otpRecord.expiresAt)) {
-            await this._otpRepository.updateOtp(email, {otp: null, expiresAt: new Date() });
+        if(isOtpExpirted(otpRecord.otpExpiresAt)) {
+            await this._otpRepository.updateOtp(email, {otp: null, otpExpiresAt: new Date() });
             throw new ValidationError(MESSAGES.OTP_INVALID_OR_EXPIRED);
         }
 
@@ -57,27 +59,28 @@ export class OTPService implements IOtpService {
         const maxSessionAgeMs = maxSessionAge * 60 * 1000;
 
         if(sessionAge > maxSessionAgeMs) {
-            await this._otpRepository.updateOtp(email, {otp: null, expiresAt: new Date() });
+            await this._otpRepository.updateOtp(email, {otp: null, otpExpiresAt: new Date() });
             throw new AppError(MESSAGES.OTP_SESSION_EXPIRED, HttpStatus.GONE)
         }
 
         const newOtp = generateOTP(6);
-        const expiresAt = getOtpExpiry(expiryMinutes);
+        const otpExpiresAt = getOtpExpiry(expiryMinutes);
 
-        await this._otpRepository.updateOtp(email, { otp: newOtp, expiresAt });
+        await this._otpRepository.updateOtp(email, { otp: newOtp, otpExpiresAt });
         await this._emailService.sendOtpEmail(email, otpRecord.userData?.name || "", newOtp);
     }
 
     async createPasswordResetOtp(email: string, name: string, userData: OTPUserData): Promise<void> {
         const otp = generateOTP(6);
-        const expiresAt = getOtpExpiry(10);
+        const otpExpiresAt = getOtpExpiry(10);
+        const expiresAt = getOtpExpiry(30);
 
         const existingOtp = await this._otpRepository.findOneByField("email", email);
 
         if (existingOtp) {
-            await this._otpRepository.updateOtp(email, { otp, expiresAt });
+            await this._otpRepository.updateOtp(email, { otp, otpExpiresAt });
         } else {
-            await this._otpRepository.create({ email, otp, userData, expiresAt });
+            await this._otpRepository.create({ email, otp, userData, otpExpiresAt, expiresAt });
         }
 
         await this._emailService.sendPasswordResetEmail(email, name, otp)
@@ -99,7 +102,7 @@ export class OTPService implements IOtpService {
         const resetToken = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
         const resetTokenExpiry = getOtpExpiry(15);
 
-        await this._otpRepository.updateOtp(email, { otp: resetToken, expiresAt: resetTokenExpiry});
+        await this._otpRepository.updateOtp(email, { otp: resetToken, otpExpiresAt: resetTokenExpiry});
 
         return resetToken;
     }

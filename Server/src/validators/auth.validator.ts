@@ -6,7 +6,8 @@ import type {
     VerifyOtpDTO,
     ResendOtpDTO,
     ForgotPasswordDTO,
-    ResetPasswordDTO
+    ResetPasswordDTO,
+    ForgotPasswordVerifyOtpDTO
 } from "../dtos/common.dto";
 import { MESSAGES, GENDER } from "../constants/constants";
 
@@ -71,31 +72,31 @@ export class AuthValidator {
         }
     }
 
-    // static validateForgotPasswordVerifyOtpInput(data: ForgotPasswordVerifyOtpDTO): void {
-    //     if (!validateEmail(data.email)) {
-    //         throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-    //     }
-    //     if (!data.otp || data.otp.trim().length === 0) {
-    //         throw new ValidationError(MESSAGES.MISSING_FIELDS);
-    //     }
-    // }
+    static validateForgotPasswordVerifyOtpInput(data: ForgotPasswordVerifyOtpDTO): void {
+        if (!validateEmail(data.email)) {
+            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
+        }
+        if (!data.otp || data.otp.trim().length === 0) {
+            throw new ValidationError(MESSAGES.MISSING_FIELDS);
+        }
+    }
 
-    // static validateResetPasswordInput(data: ResetPasswordDTO): void {
-    //     if (!validateEmail(data.email)) {
-    //         throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-    //     }
-    //     if (!data.resetToken) {
-    //         throw new ValidationError(MESSAGES.RESET_TOKEN_INVALID);
-    //     }
-    //     if (!data.newPassword || !data.confirmPassword) {
-    //         throw new ValidationError(MESSAGES.MISSING_FIELDS);
-    //     }
-    //     // Strong password check
-    //     if (!/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(data.newPassword)) {
-    //         throw new ValidationError(MESSAGES.PASSWORD_TOO_WEAK);
-    //     }
-    //     if (data.newPassword !== data.confirmPassword) {
-    //         throw new ValidationError(MESSAGES.PASSWORDS_NOT_MATCH);
-    //     }
-    // }
+    static validateResetPasswordInput(data: ResetPasswordDTO): void {
+        if (!validateEmail(data.email)) {
+            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
+        }
+        if (!data.resetToken) {
+            throw new ValidationError(MESSAGES.RESET_TOKEN_INVALID);
+        }
+        if (!data.newPassword || !data.confirmNewPassword) {
+            throw new ValidationError(MESSAGES.MISSING_FIELDS);
+        }
+        // Strong password check
+        if (!/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(data.newPassword)) {
+            throw new ValidationError(MESSAGES.PASSWORD_TOO_WEAK);
+        }
+        if (data.newPassword !== data.confirmNewPassword) {
+            throw new ValidationError(MESSAGES.PASSWORDS_NOT_MATCH);
+        }
+    }
 }

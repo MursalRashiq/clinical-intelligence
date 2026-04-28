@@ -75,9 +75,7 @@ export class AuthController implements IAuthController {
       this.setRefreshTokenCookie(res, refreshToken);
       }
 
-      sendSuccess(res, response, MESSAGES.LOGIN_SUCCESS, HttpStatus.OK);
-
-      sendSuccess(res, result, MESSAGES.REGISTRATION_COMPLETE, HttpStatus.CREATED);
+      sendSuccess(res, response, MESSAGES.REGISTRATION_COMPLETE, HttpStatus.CREATED);
     } catch (err: unknown) {
       next(err);
     }
@@ -184,83 +182,6 @@ export class AuthController implements IAuthController {
     }
   };
 
-//   userGoogleCallback = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-//     try {
-//       if (!req.user) {
-//         return res.redirect(
-//           `${env.CLIENT_URL}/patient/login?error=${MESSAGES.AUTH_FAILED}`
-//         );
-//       }
-
-//       const user = req.user as unknown as IUserDocument;
-
-//       let doctorId: string | undefined;
-//       let verificationStatus;
-//       if (user.role === ROLES.DOCTOR) {
-//         verificationStatus = await this._authService.getDoctorStatus(user._id.toString());
-//         doctorId = await this._authService.getDoctorId(user._id.toString());
-//       }
-
-//       const token = generateAccessToken(user, doctorId);
-//       const refreshToken = generateRefreshToken(user, doctorId);
-
-//       this.setRefreshTokenCookie(res, refreshToken);
-
-//       const userData = encodeURIComponent(JSON.stringify({
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//         profileImage: user.profileImage,
-//         verificationStatus
-//       }));
-
-//       return res.redirect(`${env.CLIENT_URL}/auth/callback?token=${token}&user=${userData}`);
-
-//     } catch (err: unknown) {
-//       this.logger.error("Google user callback error", err);
-//       return res.redirect(
-//         `${env.CLIENT_URL}/patient/login?error=${MESSAGES.SERVER_ERROR_CODE}`
-//       );
-//     }
-//   };
-
-//   doctorGoogleCallback = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-//     try {
-//       if (!req.user) {
-//         return res.redirect(
-//           `${env.CLIENT_URL}/doctor/login?error=${MESSAGES.AUTH_FAILED}`
-//         );
-//       }
-
-//       const user = req.user as unknown as IUserDocument;
-
-//       const verificationStatus = await this._authService.getDoctorStatus(user._id.toString());
-//       const doctorId = await this._authService.getDoctorId(user._id.toString());
-
-//       const token = generateAccessToken(user, doctorId);
-//       const refreshToken = generateRefreshToken(user, doctorId);
-
-//       this.setRefreshTokenCookie(res, refreshToken);
-
-//       const userData = encodeURIComponent(JSON.stringify({
-//         id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//         profileImage: user.profileImage,
-//         verificationStatus
-//       }));
-
-//       return res.redirect(`${env.CLIENT_URL}/auth/callback?token=${token}&user=${userData}`);
-
-//     } catch (err: unknown) {
-//       this.logger.error("Google doctor callback error", err);
-//       return res.redirect(
-//         `${env.CLIENT_URL}/doctor/login?error=${MESSAGES.SERVER_ERROR_CODE}`
-//       );
-//     }
-//   };
 
   logout = (req: Request, res: Response, _next: NextFunction): void => {
     req.logout((err) => {

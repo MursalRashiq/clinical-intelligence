@@ -10,8 +10,7 @@ import { ILoggerService } from "../interface/ILogger.service";
 import { UserMapper } from "../../mappers/user.mapper";
 import { compare } from 'bcrypt';
 import { IUserDocument } from '../../types/user.type';
-import { use } from 'passport';
-import logger from '../../utils/logger';
+
 
 
 export class AuthService implements IAuthService {
@@ -65,14 +64,9 @@ export class AuthService implements IAuthService {
             isActive: true,
         })
 
-        let doctorId: string | undefined;
-        // if (String(user.role).toLocaleLowerCase() === ROLES.DOCTOR) {
-        //     const existingDoctor = await this._ensureDoctorProfile(user);
-        //     doctorId = existingDoctor._id.toStirng();
-        // }
 
-        const token = generateToken(user, doctorId);
-        const refreshToken = generateRefreshToken(user, doctorId);
+        const token = generateToken(user);
+        const refreshToken = generateRefreshToken(user);
         await this._otpService.deleteOtp(data.email);
 
         return {
@@ -105,15 +99,10 @@ export class AuthService implements IAuthService {
 
     async login(data: LoginDTO): Promise<AuthResponseDTO<BaseUserResponseDTO>> {
         const user = await this._validateLogin(data.email, data.password, data.role);
-        let doctorId: string | undefined;
+    
 
-        // if(String(user.role).toLocaleLowerCase() === ROLES.DOCTOR) {
-        //     const doctor = await this._doctorRepository.findByUserId(user._id.toString());
-        //     doctorId = doctor?._id.toString();
-        // }
-
-        const token = generateToken(user, doctorId);
-        const refreshToken = generateRefreshToken(user, doctorId);
+        const token = generateToken(user);
+        const refreshToken = generateRefreshToken(user);
 
         return {
             user: UserMapper.toDTO(user),
@@ -219,7 +208,7 @@ export class AuthService implements IAuthService {
     async refreshToken(token: string): Promise<{ accessToken: string; }> {
         try {
             const decoded = verifyRefreshToken(token);
-            const user = await this._userRepository.findByEmail(decoded.userId);
+            const user = await this._userRepository.findByEmail(decoded.email);
 
             if (!user) {
                 throw new UnauthorizedError(MESSAGES.NOT_FOUND)
@@ -229,13 +218,10 @@ export class AuthService implements IAuthService {
                 throw new ForbiddenError(MESSAGES.USER_BLOCKED);
             }
             
-             let doctorId: string | undefined;
-            // if (String(user.role).toLocaleLowerCase() === ROLES.DOCTOR) {
-            //     const doctor = await this._doctorRepository.findByUserId(user._id.toString());
-            //     doctorId = doctor?._id.toString();
-            // }
+            
+           
 
-            const accessToken = generateToken(user, doctorId)
+            const accessToken = generateToken(user)
             return {accessToken}
         }catch (error) {
             if(error instanceof ForbiddenError) {
@@ -276,29 +262,4 @@ export class AuthService implements IAuthService {
         
         return user;
     }
-
-//    private async _ensureDoctorProfile(user: IUserDocument) {
-//     let existingDoctor = await this._doctorRepository.findByUserId(user._id.toString());
-//     if (!existingDoctor) {
-//       existingDoctor = await this._doctorRepository.create({
-//         userId: user._id,
-//         licenseNumber: null,
-//         qualifications: [],
-//         specialty: null,
-//         experienceYears: null,
-//         VideoFees: null,
-//         ChatFees: null,
-//         languages: [],
-//         verificationStatus: VerificationStatus.Pending,
-//         verificationDocuments: [],
-//         rejectionReason: null,
-//         ratingAvg: 0,
-//         ratingCount: 0,
-//         isActive: true,
-//       });
-//     }
-//     return existingDoctor;
-//   }
-
-
 }

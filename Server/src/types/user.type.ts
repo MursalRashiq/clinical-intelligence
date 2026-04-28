@@ -18,4 +18,4 @@ export interface IUser {
     updatedAt?: Date;
 }
 
-export type IUserDocument = IUser & Document<Types.ObjectId>;
+export type IUserDocument = IUser & Document<Types.ObjectId>

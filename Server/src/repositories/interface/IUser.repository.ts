@@ -10,7 +10,7 @@ export interface IUserRepository extends IBaseRepository<IUserDocument> {
     findByGoogleId(googleId: string): Promise<IUserDocument | null>;
     findByRole(role: string): Promise<IUserDocument[]>;
     updateById(id: string | Types.ObjectId, update: Partial<IUserDocument>): Promise<IUserDocument | null>;
-    getAllPatients(skip: number, limit: number, filter?: {search?: string; isActive?: boolean }): Promise<{ users: IUserDocument[]; total: number }>;
+    getAllPatients(skip: number, limit: number, filter?: { search?: string; isActive?: boolean }): Promise<{ patients: IUserDocument[]; total: number }>;
     existsByEmail(email: string): Promise<boolean>;
     existsByPhone(phone: string): Promise<boolean>;
     existsByField(fieldName: string, value: unknown): Promise<boolean>;

@@ -24,8 +24,8 @@ export const generateToken = (user: IUserDocument, doctorId?: string): string =>
         ...(doctorId && {doctorId})  
     }
 
-    return jwt.sign(payload, REFRESH_TOKENT_SECRET as jwt.Secret, {
-         expiresIn: JWT_CONFIG.refreshExpireIn, 
+    return jwt.sign(payload, ACCESS_TOKEN_SECRET as jwt.Secret, {
+         expiresIn: JWT_CONFIG.expireIn, 
         } as jwt.SignOptions);
  };
 
