@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { AdminRepository } from "../repositories/admin.repoitory";
 import { UserRepository } from "../repositories/user.repository";
-import { LoggerService } from "../services/implementation/logger.service";
+import { LoggerService } from "../services/logger.service";
 import { AdminController } from "../controllers/admin.controller";
-import { AdminService } from "../services/implementation/admin.service";
+import { AdminService } from "../services/admin.service";
 import { ADMIN_ROUTES } from '../constants/routes.constants'
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { requireAdmin } from "../middlewares/role.middleware";

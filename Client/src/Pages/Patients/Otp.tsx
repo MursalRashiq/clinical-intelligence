@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type KeyboardEvent, type ClipboardEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import AuthService from "../../services/AuthService";
 import { setUser } from "../../redux/user/userSlice";
@@ -406,13 +407,17 @@ export default function VerifyOtp() {
           {/* Verify button */}
           <button
             className="tc-btn-verify"
-            disabled={!isComplete}
+            disabled={!isComplete || loading}
             onClick={verifyOtp}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" width="16" height="16">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Verify Account
+            {loading ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" width="16" height="16">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            )}
+            {loading ? "Verifying..." : "Verify Account"}
           </button>
 
           <div className="tc-change-link">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import AuthService from "../../services/AuthService";
@@ -158,13 +159,17 @@ const ForgotEmailPage = () => {
 
             <button
               type="submit"
-              disabled={!isValidEmail}
-              style={{ width:"100%", padding:14, border:"none", borderRadius:12, background: isValidEmail ? `linear-gradient(135deg, ${t.blue}, ${t.blue2})` : "#c8d5e8", color:"white", fontFamily:"inherit", fontSize:15, fontWeight:700, cursor: isValidEmail ? "pointer" : "not-allowed", boxShadow: isValidEmail ? "0 5px 20px rgba(21,96,232,.28)" : "none", display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:16, transition:"all .22s" }}
+              disabled={!isValidEmail || loading}
+              style={{ width:"100%", padding:14, border:"none", borderRadius:12, background: isValidEmail ? `linear-gradient(135deg, ${t.blue}, ${t.blue2})` : "#c8d5e8", color:"white", fontFamily:"inherit", fontSize:15, fontWeight:700, cursor: (isValidEmail && !loading) ? "pointer" : "not-allowed", opacity: loading ? 0.7 : 1, boxShadow: isValidEmail ? "0 5px 20px rgba(21,96,232,.28)" : "none", display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:16, transition:"all .22s" }}
             >
-              Send Reset Code
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
+              {loading ? "Sending..." : "Send Reset Code"}
+              {loading ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              )}
             </button>
 
             <div style={{ textAlign:"center", fontSize:13, color:t.sub }}>

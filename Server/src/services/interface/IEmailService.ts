@@ -1,4 +1,4 @@
-import { EmailConfig } from "../../types/email.type";
+
 
 export interface IEmailService {
     //sendEmail(config: EmailConfig): Promise<void>;

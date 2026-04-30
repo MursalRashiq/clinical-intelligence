@@ -7,7 +7,7 @@ import { FRONTEND_ROUTES } from "../utils/constants";
 
 interface Props {
   children: React.ReactElement;
-  roleScope?: "admin" | "user"; // Optional to allow fallback, but we should specify it
+  roleScope?: "admin" | "user" | "doctor"; // Optional to allow fallback, but we should specify it
 }
 
 const PublicRoute: React.FC<Props> = ({ children, roleScope = "user" }) => {
@@ -17,6 +17,10 @@ const PublicRoute: React.FC<Props> = ({ children, roleScope = "user" }) => {
   if (roleScope === "admin") {
     if (currentAdmin) {
       return <Navigate to={FRONTEND_ROUTES.ADMIN_DASHBOARD} replace />;
+    }
+  } else if (roleScope === "doctor") {
+    if (currentUser && currentUser.role === "doctor") {
+      return <Navigate to={FRONTEND_ROUTES.HOME} replace />; // Or doctor dashboard if available
     }
   } else {
     if (currentUser) {

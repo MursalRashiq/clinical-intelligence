@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { theme } from "../../theme";
 import Navbar from "../../components/Navbar";
 import Input from "../../components/Ui/input";
-import authService from "../../services/authService";
+import authService from "../../services/AuthService";
+import { FRONTEND_ROUTES } from "../../utils/constants";
 
 const ResetPassword = () => {
     const navigate = useNavigate();
@@ -58,13 +59,16 @@ const ResetPassword = () => {
             });
 
             if (res.success) {
-                toast.success("Password changed successfully!");
-                navigate("/");
+                toast.success("Password updated successfully!");
+                setTimeout(() => {
+                    navigate(FRONTEND_ROUTES.PATIENT_PROFILE, { replace: true });
+                }, 1500);
             } else {
                 toast.error(res.message || "Failed to change password");
             }
-        } catch (error: any) {
-            toast.error(error.message || "An error occurred");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "An error occurred";
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }

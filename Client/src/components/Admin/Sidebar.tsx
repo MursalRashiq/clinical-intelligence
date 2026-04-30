@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onMobileClose }) => {
       dispatch(logoutAdmin());
       toast.success("Logged out successfully");
       window.location.href = FRONTEND_ROUTES.ADMIN_LOGIN;
-    } catch (error) {
+    } catch {
       toast.error("Logout failed");
     }
   };

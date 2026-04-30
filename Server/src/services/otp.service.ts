@@ -1,11 +1,11 @@
-import { IOTPRepository } from "../../repositories/interface/IOtp.repository";
-import { IEmailService } from "../interface/IEmailService";
-import { generateOTP, getOtpExpiry, isOtpExpirted } from '../../utils/otp.util';
-import type { IOtpService } from "../interface/IOtpService";
-import type { OTPData, OTPUserData } from '../../types/otp.type';
-import { ILoggerService } from "../interface/ILogger.service";
-import { AppError, ValidationError } from "../../errors/AppError";
-import { HttpStatus, MESSAGES } from "../../constants/constants";
+import { IOTPRepository } from "../repositories/interface/IOtp.repository";
+import { IEmailService } from "./interface/IEmailService";
+import { generateOTP, getOtpExpiry, isOtpExpirted } from '../utils/otp.util';
+import type { IOtpService } from "./interface/IOtpService";
+import type { OTPData, OTPUserData } from '../types/otp.type';
+import { ILoggerService } from "./interface/ILogger.service";
+import { AppError, ValidationError } from "../errors/AppError";
+import { HttpStatus, MESSAGES } from "../constants/constants";
 
 export class OTPService implements IOtpService {
     constructor (
@@ -16,9 +16,10 @@ export class OTPService implements IOtpService {
 
     async createAndSendOtp(email: string, name: string, userData: OTPUserData, expiryMinutes: number = 1): Promise<string> {
         const otp = generateOTP(6);
+        console.log(`OTP for ${email} is: ${otp}\n`);
         this._logger.debug("OTP generated", { email });
         const otpExpiresAt = getOtpExpiry(expiryMinutes);
-        const expiresAt = getOtpExpiry(30); // MongoDB TTL (30 minutes)
+        const expiresAt = getOtpExpiry(30);
 
         await this._otpRepository.create({
             email,
@@ -64,6 +65,7 @@ export class OTPService implements IOtpService {
         }
 
         const newOtp = generateOTP(6);
+        console.log(`[DEV ONLY] Resend OTP for ${email} is: ${newOtp}\n`);
         const otpExpiresAt = getOtpExpiry(expiryMinutes);
 
         await this._otpRepository.updateOtp(email, { otp: newOtp, otpExpiresAt });
@@ -72,6 +74,7 @@ export class OTPService implements IOtpService {
 
     async createPasswordResetOtp(email: string, name: string, userData: OTPUserData): Promise<void> {
         const otp = generateOTP(6);
+        console.log(`[DEV ONLY] Password Reset OTP for ${email} is: ${otp}\n`);
         const otpExpiresAt = getOtpExpiry(10);
         const expiresAt = getOtpExpiry(30);
 

@@ -1,0 +1,1 @@
+import type { SubmitVerificationDTO, VerificationStatus } from "../../dtos/doctor.dto/doctor.dto";

@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import cookieParser from "cookie-parser";
 import session from 'express-session';
 import cors from 'cors'
+import passport from 'passport';
 
 
 import authRouter from './routes/auth.router';
@@ -35,7 +36,6 @@ const corsOptions = {
     if (allowedOrigins.includes(requestOrigin)) {
       return callback(null, true);
     } else {
-      // console.log(`[API CORS] Blocked Origin: ${requestOrigin}`);
       return callback(new Error("Not allowed by CORS"));
     }
   },
@@ -62,6 +62,9 @@ app.use(
     })
 )
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.get("/", (req, res) => {
     res.json({
         success: true,
@@ -73,6 +76,9 @@ app.get("/", (req, res) => {
 
 app.use(BASE_ROUTES.AUTH, authRouter);
 app.use(BASE_ROUTES.ADMIN, adminRouter);
+
+import { errorHandler } from "./middlewares/error.handler.middleware";
+app.use(errorHandler);
 
 
 const PORT = env.PORT;

@@ -4,7 +4,7 @@ import { ADMIN_API_ROUTES } from '../utils/constants'
 interface ApiError {
     response?: {
         data?: {
-            messages?: string;
+            message?: string;
         };
     };
     message?: string;
@@ -17,7 +17,7 @@ export class AdminServiceClass {
             return res.data;
         } catch (error) {
             const err = error as ApiError;
-            return { success: false, message: err.response?.data?.messages || err.message || "Login failed" };
+            return { success: false, message: err.response?.data?.message || err.message || "Login failed" };
         }
     }
 
@@ -33,7 +33,7 @@ export class AdminServiceClass {
             return res.data;
         } catch (error) {
             const err = error as ApiError;
-            return { success: false, message: err.response?.data?.messages || err.message || "Error fetching patients", data: [] }
+            return { success: false, message: err.response?.data?.message || err.message || "Error fetching patients", data: [] }
         }
     }
 
@@ -43,7 +43,7 @@ export class AdminServiceClass {
             return res.data;
         } catch (error) {
             const err = error as ApiError;
-            return { success: false, message: err.response?.data?.messages || err.message || "Error fetching patients", data: [] }
+            return { success: false, message: err.response?.data?.message || err.message || "Error fetching patients", data: [] }
         }
     }
 
@@ -53,7 +53,7 @@ export class AdminServiceClass {
             return res.data;
         } catch (error) {
             const err = error as ApiError;
-            return { success: false, message: err.response?.data?.messages || err.message || "Error blocking patients", data: [] }
+            return { success: false, message: err.response?.data?.message || err.message || "Error blocking patients", data: [] }
         }
     }
 
@@ -63,7 +63,7 @@ export class AdminServiceClass {
             return res.data;
         } catch (error) {
             const err = error as ApiError;
-            return { success: false, message: err.response?.data?.messages || err.message || "Error unblocking patients", data: [] }
+            return { success: false, message: err.response?.data?.message || err.message || "Error unblocking patients", data: [] }
         }
     }
 

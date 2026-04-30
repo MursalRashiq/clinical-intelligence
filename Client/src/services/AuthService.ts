@@ -1,9 +1,10 @@
 import axiosInstance from "../api/axiosInstance";
 import {
     USER_API_ROUTES,
-    AUTH_BASE_URL,
     AUTH_ROUTES,
-    DOCTOR_API_ROUTES
+    DOCTOR_API_ROUTES,
+    ADMIN_API_ROUTES,
+    AUTH_BASE_URL
 } from '../utils/constants';
 import { handleApiError } from '../utils/errorHandles';
 
@@ -15,7 +16,7 @@ import type {
 } from '../types/auth.type';
 
 interface JwtPayload {
-    useerId: string;
+    userId: string;
     id: string;
     role: 'patient' | 'doctor' | 'admin';
     exp: number;
@@ -33,7 +34,7 @@ class AuthService {
     private decodeToken<T = JwtPayload>(token: string): T | null {
         try { 
             const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, "+").replace(/ _/g, '/');
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, '/');
             const jsonPayload = decodeURIComponent (
                 atob(base64)
                 .split('')
@@ -70,8 +71,8 @@ class AuthService {
 
         return {
             ...decoded,
-            id: decoded.id || decoded.useerId,
-            useerId: decoded.useerId || decoded.id,
+            id: decoded.id || decoded.userId,
+            userId: decoded.userId || decoded.id,
         } as JwtPayload;
     }
 
@@ -131,6 +132,63 @@ class AuthService {
             return handleApiError(error, "Login failed")
         }
     }
+
+    async doctorVerifyOtp(otpData: OtpRequest) {
+        try {
+            const response = await axiosInstance.post(
+                DOCTOR_API_ROUTES.VERIFY_OTP,
+                otpData
+            );
+            return response.data;
+        } catch (error: unknown) {
+            return handleApiError(error, "OTP verifcation failed");
+        }
+    }
+
+    async doctorResendOtp(email: string) {
+        try {
+            const response = await axiosInstance.post(DOCTOR_API_ROUTES.RESEND_OTP, {
+                email,
+            });
+            return response.data;
+        } catch (error: unknown) {
+            return handleApiError(error, "Failed to resend OTP");
+        }
+    }
+
+     async doctorLogin(credentials: LoginRequest) {
+    try {
+      const response = await axiosInstance.post(
+        DOCTOR_API_ROUTES.LOGIN,
+        credentials
+      );
+      if (response.data?.data?.token) {
+        this.saveToken(response.data.data.token);
+      } else if (response.data?.token) {
+        this.saveToken(response.data.token);
+      }
+      return response.data;
+    } catch (error: unknown) {
+      return handleApiError(error, "Login failed");
+    }
+  }
+
+   async adminLogin(credentials: LoginRequest) {
+    try {
+      const response = await axiosInstance.post(
+        ADMIN_API_ROUTES.LOGIN,
+        credentials
+      );
+      if (response.data?.data?.token) {
+        this.saveToken(response.data.data.token);
+      } else if (response.data?.token) {
+        this.saveToken(response.data.token);
+      }
+      return response.data;
+    } catch (error: unknown) {
+      return handleApiError(error, "Admin login failed");
+    }
+  }
 
 
   async logout() {
@@ -242,6 +300,10 @@ class AuthService {
     } catch (error: unknown) {
       return handleApiError(error, "Failed to change password");
     }
+  }
+
+  userGoogleLogin(): void {
+    window.location.href = `${AUTH_BASE_URL}${AUTH_ROUTES.USER_GOOGLE_LOGIN}`
   }
 
 }

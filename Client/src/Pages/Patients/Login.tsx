@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { Loader2 } from "lucide-react";
 import AuthService from "../../services/AuthService";
 import { setUser } from "../../redux/user/userSlice";
 import { FRONTEND_ROUTES } from "../../utils/constants";
@@ -12,13 +13,13 @@ const HeartbeatIcon = () => (
     </svg>
 );
 const EyeIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ width: 18, height: 18 }}>
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
         <circle cx={12} cy={12} r={3} />
     </svg>
 );
 const EyeOffIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ width: 18, height: 18 }}>
         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
         <line x1={1} y1={1} x2={23} y2={23} />
     </svg>
@@ -123,6 +124,7 @@ function LoginForm({ onToast }: { onToast: (msg: string, isError?: boolean) => v
 
     const handleLogin = async () => {
         if (!email || !password) { onToast("Please fill in all fields", true); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { onToast("Please enter a valid email address", true); return; }
         
         setLoading(true);
         try {
@@ -161,12 +163,16 @@ function LoginForm({ onToast }: { onToast: (msg: string, isError?: boolean) => v
                 <input type="checkbox" id="rememberMe" checked={remember} onChange={(e) => setRemember(e.target.checked)} style={{ width: 16, height: 16, accentColor: "var(--blue)", cursor: "pointer", flexShrink: 0 }} />
                 <label htmlFor="rememberMe" style={{ fontSize: 13, color: "var(--sub)", cursor: "pointer" }}>Remember me for 30 days</label>
             </div>
-            <button onClick={handleLogin} style={{ width: "100%", padding: 14, border: "none", borderRadius: 12, background: "linear-gradient(135deg,var(--blue),var(--blue2))", color: "white", fontFamily: "inherit", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 20px rgba(21,96,232,.3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
-                <svg style={{ width: 17, height: 17 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1={15} y1={12} x2={3} y2={12} /></svg>
-                Sign In to Account
+            <button disabled={loading} onClick={handleLogin} style={{ width: "100%", padding: 14, border: "none", borderRadius: 12, background: "linear-gradient(135deg,var(--blue),var(--blue2))", color: "white", fontFamily: "inherit", fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: "0 6px 20px rgba(21,96,232,.3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+                {loading ? (
+                    <Loader2 className="animate-spin" size={17} />
+                ) : (
+                    <svg style={{ width: 17, height: 17 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1={15} y1={12} x2={3} y2={12} /></svg>
+                )}
+                {loading ? "Signing In..." : "Sign In to Account"}
             </button>
             <Divider text="or continue with" />
-            <GoogleButton onClick={() => onToast("Redirecting to Google…")} label="Login with Google" />
+            <GoogleButton onClick={() => AuthService.userGoogleLogin()} label="Login with Google" />
             <div style={{ textAlign: "center", fontSize: 14, color: "var(--sub)" }}>
                 Don't have an account?
                 <Link to="/register" style={{ color: "var(--blue)", fontWeight: 700, textDecoration: "none", marginLeft: 4 }}>Sign Up →</Link>

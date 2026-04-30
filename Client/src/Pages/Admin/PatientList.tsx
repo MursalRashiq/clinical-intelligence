@@ -21,9 +21,19 @@ interface Patient {
     isActive: boolean;
 }
 
+interface ButtonProps {
+    children: React.ReactNode;
+    className?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    variant?: "default" | "ghost" | "outline" | "secondary";
+    size?: "sm" | "md" | "lg";
+    style?: React.CSSProperties;
+}
+
 // --- Premium UI Components (Internal) ---
-const Button = ({ children, className, onClick, disabled, variant = "default", size = "md", style }: any) => {
-    const base = {
+const Button = ({ children, className, onClick, disabled, variant = "default", size = "md", style }: ButtonProps) => {
+    const base: React.CSSProperties = {
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
@@ -37,14 +47,14 @@ const Button = ({ children, className, onClick, disabled, variant = "default", s
         outline: "none"
     };
     
-    const variants: any = {
+    const variants: Record<string, React.CSSProperties> = {
         default: { background: `linear-gradient(135deg, ${t.blue}, ${t.blue2})`, color: "white", boxShadow: "0 4px 12px rgba(21,96,232,0.2)" },
         ghost: { background: "transparent", color: t.sub },
         outline: { background: "white", color: t.text, border: `1.5px solid ${t.border}` },
         secondary: { background: t.blueLight, color: t.blue }
     };
     
-    const sizes: any = {
+    const sizes: Record<string, React.CSSProperties> = {
         sm: { padding: "6px 12px", fontSize: "12px" },
         md: { padding: "10px 20px", fontSize: "14px" },
         lg: { padding: "14px 28px", fontSize: "15px" }
@@ -55,7 +65,7 @@ const Button = ({ children, className, onClick, disabled, variant = "default", s
             onClick={onClick}
             disabled={disabled}
             className={className}
-            style={{ ...base as any, ...variants[variant], ...sizes[size], ...style }}
+            style={{ ...base, ...variants[variant], ...sizes[size], ...style }}
             onMouseEnter={(e) => {
                 if (!disabled) e.currentTarget.style.transform = "translateY(-1px)";
             }}
@@ -68,6 +78,8 @@ const Button = ({ children, className, onClick, disabled, variant = "default", s
     );
 };
 
+const limit = 8;
+
 const PatientsListPage: React.FC = () => {
     const navigate = useNavigate();
     const [patients, setPatients] = useState<Patient[]>([]);
@@ -79,7 +91,6 @@ const PatientsListPage: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-    const limit = 8;
 
     const getInitials = (name?: string) => {
         if (!name) return "??";
@@ -109,13 +120,14 @@ const PatientsListPage: React.FC = () => {
                 toast.error(res?.message || "Failed to fetch patients");
                 setPatients([]);
             }
-        } catch (e: any) {
-            toast.error(e?.message || "Error connecting to server");
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Error connecting to server";
+            toast.error(message);
             setPatients([]);
         } finally {
             setLoading(false);
         }
-    }, [debouncedSearch, statusFilter, limit]);
+    }, [debouncedSearch, statusFilter]);
 
     useEffect(() => {
         fetchPatients(page);
@@ -138,7 +150,7 @@ const PatientsListPage: React.FC = () => {
             } else {
                 toast.error(res?.message || `Failed to ${currentStatus ? 'block' : 'unblock'} patient`);
             }
-        } catch (error: any) {
+        } catch {
             toast.error("An error occurred while updating patient status");
         }
     };
@@ -268,6 +280,7 @@ const PatientsListPage: React.FC = () => {
                                         outline: "none",
                                         fontFamily: "inherit",
                                         background: "white",
+                                        color: "#000",
                                         transition: "border-color 0.2s",
                                         boxShadow: "0 2px 8px rgba(0,0,0,0.02)"
                                     }}

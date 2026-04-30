@@ -24,6 +24,14 @@ export const env = {
         return process.env.REFRESH_TOKEN_SECRET || '';
     },
 
+    get ACCESS_TOKEN_EXPIRES_IN(){
+        return process.env.ACCESS_TOKEN_EXPIRE || "30m"
+    },
+
+    get REFRESH_TOKEN_EXPIRES_IN() {
+        return process.env.REFRESH_TOKEN_EXPIRES_IN || "30d"
+    },
+
     get REFRESH_TOKEN_MAX_AGE() {
         return Number(process.env.REFRESH_TOKEN_MAX_AGE);
     },
@@ -62,5 +70,17 @@ export const env = {
 
     get CLIENT_URL_2() {
         return process.env.CLIENT_URL_2
-    }
+    },
+
+    get GOOGLE_CLIENT_ID() {
+        return process.env.GOOGLE_CLIENT_ID ||  ""
+    },
+
+    get GOOGLE_CLIENT_SECRET() {
+        return process.env.GOOGLE_CLIENT_SECRET ||  ""
+    },
+
+    get GOOGLE_CALLBACK_URL() {
+        return process.env.GOOGLE_CALLBACK_URL ||  ""
+    },
 }

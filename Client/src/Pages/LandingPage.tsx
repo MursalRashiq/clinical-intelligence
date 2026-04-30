@@ -171,6 +171,26 @@ const Hero = ({ onBook: _onBook }: { onBook: (name: string) => void }) => {
               Register Free
             </Link>
           )}
+
+          <Link
+            to={FRONTEND_ROUTES.DOCTOR_REGISTER}
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: t.blue,
+              textDecoration: "none",
+              marginLeft: 12,
+              borderBottom: "1px solid transparent",
+              transition: "all 0.2s",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderBottom = `1px solid ${t.blue}`)}
+            onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}
+          >
+            Are you a Doctor? Join here →
+          </Link>
         </div>
 
         {/* Stats */}

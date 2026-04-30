@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { HttpStatus, MESSAGES } from "../constants/constants";
-import { LoggerService } from "../services/implementation/logger.service";
+import { LoggerService } from "../services/logger.service";
 
 const logger = new LoggerService("CheckUserBlocked");
 

@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { Loader2 } from "lucide-react";
 import AuthService from "../../services/AuthService";
-import { setUser } from "../../redux/user/userSlice";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 
 // ── Icons ──
@@ -36,20 +35,17 @@ const getMaxDate = () => {
 
 export default function PatientRegistration() {
     const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const [loading, setLoading] = useState(false);
+
     const [codeIndex, setCodeIndex] = useState(0);
     const [showPw, setShowPw] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
         name: "",
         email: "",
         phone: "",
         password: "",
         confirmPassword: "",
-        dob: "",
-        gender: "",
-        bloodGroup: "",
         terms: false,
     });
     const [toast, setToast] = useState<{ msg: string; err: boolean; show: boolean }>({
@@ -65,9 +61,9 @@ export default function PatientRegistration() {
         setTimeout(() => setToast((t) => ({ ...t, show: false })), 3500);
     };
 
-    const doGoogle = () => {
-        AuthService.userGoogleLogin();
-    };
+    // const doGoogle = () => {
+    //     AuthService.userGoogleLogin();
+    // };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -75,11 +71,18 @@ export default function PatientRegistration() {
         if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
             showToast("Please enter a valid email address", true); return;
         }
-        if (!form.phone.trim() || form.phone.replace(/\s/g, "").length < 7) {
-            showToast("Please enter a valid phone number", true); return;
+        const strippedPhone = form.phone.replace(/\D/g, "");
+        if (strippedPhone.length !== 10) {
+            showToast("Phone number must be exactly 10 digits", true); return;
+        }
+        if (/^(\d)\1{9}$/.test(strippedPhone)) {
+            showToast("Phone number cannot be all the same digit", true); return;
         }
         if (form.password.length < 8) {
             showToast("Password must be at least 8 characters long", true); return;
+        }
+        if (!/^(?=.*[A-Z])(?=.*\d)/.test(form.password)) {
+            showToast("Password must contain at least one uppercase letter and one number", true); return;
         }
         if (form.password !== form.confirmPassword) {
             showToast("Passwords do not match", true); return;
@@ -87,6 +90,7 @@ export default function PatientRegistration() {
         if (!form.terms) { showToast("Please accept the Terms of Service", true); return; }
 
         setLoading(true);
+
         try {
             const fullPhone = `${codes[codeIndex].c}${form.phone.replace(/\s/g, "")}`;
             const res = await AuthService.userRegister({
@@ -95,8 +99,6 @@ export default function PatientRegistration() {
                 phone: fullPhone,
                 password: form.password,
                 confirmPassword: form.confirmPassword,
-                gender: form.gender as any,
-                dob: form.dob,
                 role: "patient"
             });
 
@@ -109,8 +111,9 @@ export default function PatientRegistration() {
             } else {
                 showToast(res?.message || "Registration failed", true);
             }
-        } catch (error: any) {
-            showToast(error?.message || "Something went wrong", true);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Something went wrong";
+            showToast(message, true);
         } finally {
             setLoading(false);
         }
@@ -214,7 +217,8 @@ export default function PatientRegistration() {
         .terms-txt a{color:var(--blue);font-weight:600;text-decoration:none;}
         .terms-txt a:hover{text-decoration:underline;}
         .btn-submit{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 22px rgba(21,96,232,.28);transition:all .22s;display:flex;align-items:center;justify-content:center;gap:9px;}
-        .btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(21,96,232,.36);}
+        .btn-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px rgba(21,96,232,.36);}
+        .btn-submit:disabled{cursor:not-allowed;opacity:0.7;}
         .signin-strip{padding:18px 50px 26px;border-top:1px solid var(--border);background:var(--bg);text-align:center;font-size:14px;color:var(--sub);margin-top:22px;}
         .signin-strip a{color:var(--blue);font-weight:700;text-decoration:none;margin-left:5px;}
         .signin-strip a:hover{text-decoration:underline;}
@@ -300,7 +304,7 @@ export default function PatientRegistration() {
                             Create your free account to book appointments and manage your health journey.
                         </div>
 
-                        <button className="btn-google" onClick={doGoogle}>
+                        <button className="btn-google" onClick={() => AuthService.userGoogleLogin()}>
                             <svg className="g-icon" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -337,13 +341,7 @@ export default function PatientRegistration() {
                             </div>
 
                             {/* Patient Name */}
-                            <div className="field">
-                                <label>
-                                    Patient Name{" "}
-                                    <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "#9ab" }}>
-                                        (as on medical records)
-                                    </span>
-                                </label>
+                            {/* <div className="field">
                                 <div className="fw">
                                     <svg className="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -351,15 +349,8 @@ export default function PatientRegistration() {
                                         <line x1="8" y1="2" x2="8" y2="6" />
                                         <line x1="3" y1="10" x2="21" y2="10" />
                                     </svg>
-                                    {/* <input
-                    type="text"
-                    placeholder="Full name as per ID / medical card"
-                    value={form.pname}
-                    onChange={(e) => set("pname", e.target.value)}
-                    required
-                  /> */}
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Email */}
                             <div className="field">
@@ -455,7 +446,7 @@ export default function PatientRegistration() {
                             </div>
 
                             {/* DOB + Gender */}
-                            <div className="row2">
+                            {/* <div className="row2">
                                 <div className="field">
                                     <label>Date of Birth</label>
                                     <div className="fw">
@@ -494,10 +485,10 @@ export default function PatientRegistration() {
                                         ))}
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Blood Group */}
-                            <div className="field">
+                            {/* <div className="field">
                                 <label>
                                     Blood Group{" "}
                                     <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "#9ab" }}>
@@ -518,7 +509,7 @@ export default function PatientRegistration() {
                                         ))}
                                     </select>
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Terms */}
                             <div className="terms-box">
@@ -535,14 +526,18 @@ export default function PatientRegistration() {
                             </div>
 
                             {/* Submit */}
-                            <button className="btn-submit" type="submit">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="17" height="17">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                    <line x1="19" y1="8" x2="19" y2="14" />
-                                    <line x1="22" y1="11" x2="16" y2="11" />
-                                </svg>
-                                Create My Patient Account
+                            <button className="btn-submit" type="submit" disabled={loading}>
+                                {loading ? (
+                                    <Loader2 className="animate-spin" size={17} />
+                                ) : (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="17" height="17">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <line x1="19" y1="8" x2="19" y2="14" />
+                                        <line x1="22" y1="11" x2="16" y2="11" />
+                                    </svg>
+                                )}
+                                {loading ? "Creating Account..." : "Create My Patient Account"}
                             </button>
                         </form>
                     </div>

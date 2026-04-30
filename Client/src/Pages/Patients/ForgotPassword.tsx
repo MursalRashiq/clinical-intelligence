@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import AuthService from "../../services/AuthService";
@@ -362,13 +363,17 @@ const ForgotPasswordPage = () => {
             {/* Submit */}
             <button
               type="submit"
-              disabled={!canSubmit}
-              style={{ width:"100%", padding:14, border:"none", borderRadius:12, background: canSubmit ? `linear-gradient(135deg, ${t.blue}, ${t.blue2})` : "#c8d5e8", color:"white", fontFamily:"inherit", fontSize:15, fontWeight:700, cursor: canSubmit ? "pointer" : "not-allowed", boxShadow: canSubmit ? "0 5px 20px rgba(21,96,232,.28)" : "none", display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:16, transition:"all .22s" }}
+              disabled={!canSubmit || loading}
+              style={{ width:"100%", padding:14, border:"none", borderRadius:12, background: canSubmit ? `linear-gradient(135deg, ${t.blue}, ${t.blue2})` : "#c8d5e8", color:"white", fontFamily:"inherit", fontSize:15, fontWeight:700, cursor: (canSubmit && !loading) ? "pointer" : "not-allowed", opacity: loading ? 0.7 : 1, boxShadow: canSubmit ? "0 5px 20px rgba(21,96,232,.28)" : "none", display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:16, transition:"all .22s" }}
             >
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              Update Password
+              {loading ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              )}
+              {loading ? "Updating..." : "Update Password"}
             </button>
 
             {/* Cancel */}

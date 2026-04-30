@@ -29,11 +29,19 @@ export const FRONTEND_ROUTES = {
   FORGOT_PASSWORD_OTP: "/forgot-password/otp",
   FORGOT_PASSWORD_RESET: "/forgot-password/reset",
   RESET_PASSWORD_LOGGED_IN: "/reset-password",
+  PATIENT_PROFILE: "/profile",
+  PATIENT_DETAILS: "/patient-details",
+
+
+  DOCTOR_REGISTER: "/doctor/register",
+
   DASHBOARD: "/dashboard",
   ADMIN_LOGIN: "/admin/login",
   ADMIN_DASHBOARD: "/admin/dashboard",
   ADMIN_PATIENTS: "/admin/patients",
   FORGOT_PASSWORD_EMAIL: "admin/forgot/email",
+
+  ERROR_PAGE_404: "/patient/404",
   ADMIN_PATIENT_DETAILS: (id: string) => `/admin/patients/${id}`
 };
 

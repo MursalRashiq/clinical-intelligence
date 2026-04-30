@@ -20,6 +20,7 @@ import { generateToken, generateRefreshToken } from "../utils/jwt.utils";
 import { ILoggerService } from "../services/interface/ILogger.service";
 import { IUserDocument } from "../types/user.type";
 
+
 export class AuthController implements IAuthController {
   constructor(
     private _authService: IAuthService,
@@ -182,28 +183,72 @@ export class AuthController implements IAuthController {
     }
   };
 
-
-  logout = (req: Request, res: Response, _next: NextFunction): void => {
-    req.logout((err) => {
-      if (err) {
-        this.logger.error("Logout error", err);
-        return sendError(res, MESSAGES.LOGOUT_FAILED, HttpStatus.INTERNAL_SERVER_ERROR,);
+  userGoogleCallback = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    try {
+      if(!req.user) {
+        return res.redirect(
+          `${env.CLIENT_URL}/patient/login?error=${MESSAGES.AUTH_FAILED}`
+        )
       }
 
+      const user = req.user as unknown as IUserDocument;
+
+      let doctorId: string | undefined;
+      let verificationStatus;
+
+      if (user.role === ROLES.DOCTOR) {
+        verificationStatus = await this._authService.getDoctorStatus(user._id.toString());
+        doctorId = await this._authService.getDoctorID(user._id.toString());
+      }
+
+      const token = generateToken(user, doctorId);
+      const refreshToken = generateRefreshToken(user, doctorId);
+
+      this.setRefreshTokenCookie(res, refreshToken);
+
+      const userData = encodeURIComponent(JSON.stringify({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage,
+        verificationStatus
+      }));
+
+      return res.redirect(`${env.CLIENT_URL}/auth/callback?token=${token}&user=${userData}`)
+    } catch (err: unknown) {
+      this.logger.error("Google user callback error", err);
+      return res.redirect(
+        `${env.CLIENT_URL}/patient/login?error=${MESSAGES.SERVER_ERROR}`
+      )
+    }
+  } 
+
+
+  logout = (req: Request, res: Response, _next: NextFunction): void => {
+    try {
       res.clearCookie(COOKIE_OPTIONS.REFRESH_TOKEN, {
         httpOnly: true,
         secure: env.NODE_ENV === COOKIE_OPTIONS.ENV_PRODUCTION,
         sameSite: env.NODE_ENV === COOKIE_OPTIONS.ENV_PRODUCTION ? COOKIE_OPTIONS.SAME_SITE_NONE : COOKIE_OPTIONS.SAME_SITE_LAX
       });
 
-      req.session.destroy((err) => {
+      req.logout((err) => {
         if (err) {
-          this.logger.error("Session destroy error", err);
+          this.logger.error("Passport logout error", err);
         }
-
-        return sendSuccess(res, undefined, MESSAGES.LOGOUT_SUCCESS, HttpStatus.OK);
+        
+        req.session.destroy((sessionErr) => {
+          if (sessionErr) {
+            this.logger.error("Session destruction error", sessionErr);
+          }
+          sendSuccess(res, undefined, MESSAGES.LOGOUT_SUCCESS, HttpStatus.OK);
+        });
       });
-    });
+    } catch (err: unknown) {
+      this.logger.error("Logout error", err);
+      sendError(res, MESSAGES.LOGOUT_FAILED, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   };
 
 }

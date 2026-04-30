@@ -60,11 +60,9 @@ export interface IAuthController {
     next: NextFunction
   ): Promise<void>;
 
-//   userGoogleCallback(req: Request, res: Response, next: NextFunction): void;
-
-//   doctorGoogleCallback(req: Request, res: Response, next: NextFunction): void;
-
   logout(req: Request, res: Response, next: NextFunction): void;
+
+  userGoogleCallback(req: Request, res: Response, next: NextFunction): void;
 
   refreshToken(req: Request, res: Response, next: NextFunction): void;
 }

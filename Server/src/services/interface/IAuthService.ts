@@ -29,7 +29,10 @@ export interface IAuthService {
 
      changePassword(data: ChangePasswordDTO): Promise<void>;
 
+     getDoctorStatus(userId: string): Promise<string>;
+
+     getDoctorID(userId: string): Promise<string | undefined>;
+
      refreshToken(token: string): Promise<{accessToken: string}>;
-
-
+     validateGoogleUser(profile: any): Promise<any>;
 }

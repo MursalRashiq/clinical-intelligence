@@ -1,10 +1,10 @@
 import nodemailer, { Transporter } from "nodemailer";
-import { env } from '../../config/env';
-import type { IEmailService  } from "../interface/IEmailService";
-import type { EmailConfig, SmtpConfig } from "../../types/email.type";
-import { CONFIG, HttpStatus, MESSAGES } from '../../constants/constants';
-import { AppError } from '../../errors/AppError';
-import { ILoggerService } from "../interface/ILogger.service";
+import { env } from '../config/env';
+import type { IEmailService  } from "./interface/IEmailService";
+import type { EmailConfig, SmtpConfig } from "../types/email.type";
+import { CONFIG, HttpStatus, MESSAGES } from '../constants/constants';
+import { AppError } from '../errors/AppError';
+import { ILoggerService } from "./interface/ILogger.service";
 
 export class EmailService implements IEmailService {
     private _trasporter: Transporter;

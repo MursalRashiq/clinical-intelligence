@@ -17,9 +17,9 @@ const createWebStorage = () => {
     };
   }
   return {
-    getItem: (_key: string) => Promise.resolve(null),
-    setItem: (_key: string, value: any) => Promise.resolve(value),
-    removeItem: (_key: string) => Promise.resolve(),
+    getItem: () => Promise.resolve(null),
+    setItem: (_: string, value: unknown) => Promise.resolve(value),
+    removeItem: () => Promise.resolve(),
   };
 };
 

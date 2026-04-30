@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import type { ILoggerService } from '../interface/ILogger.service';
-import { debug, info } from 'console';
+import type { ILoggerService } from './interface/ILogger.service';
 
 export class LoggerService implements ILoggerService {
     private readonly _context: string;
@@ -60,12 +59,10 @@ export class LoggerService implements ILoggerService {
         const timestamp = new Date().toISOString();
         this._writeToStderr(`[${timestamp}] [ERROR] [${this._context}] ${message}`);
 
-        let errorDetails = "";
         if (error instanceof Error) {
             this._writeToStderr(`Stack: ${error.stack}`);
-            errorDetails = `Stack: ${error.stack}`;
-        }else if (error) {
-            errorDetails = `Error: ${JSON.stringify(error)}`;
+        } else if (error) {
+            const errorDetails = `Error: ${JSON.stringify(error)}`;
             this._writeToStderr(`Error details: ${errorDetails}`);
         }
 

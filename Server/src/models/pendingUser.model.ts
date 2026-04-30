@@ -37,9 +37,7 @@ const PendingUserSchema: Schema<IPendingUser> = new Schema<IPendingUser>(
 
 PendingUserSchema.index({ otpExpiresAt: 1 }, { expireAfterSeconds: 0 });
 
-interface IPendingUserModel extends Model<IPendingUser> {}
-
-const PendingUser: IPendingUserModel = mongoose.model<IPendingUser, IPendingUserModel>(
+const PendingUser = mongoose.model<IPendingUser>(
   'PendingUser',
   PendingUserSchema,
 );

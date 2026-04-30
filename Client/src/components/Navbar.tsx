@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { toast } from "sonner";
 import { theme } from "../theme";
 import HeartbeatIcon from "./HeartbeatIcon";
 import { logout, selectCurrentUser } from "../redux/user/userSlice";
 import { FRONTEND_ROUTES } from "../utils/constants";
+import AuthService from "../services/AuthService";
 
 interface NavbarProps {
   /** Highlight a nav link as active by label e.g. "Home" */
@@ -20,12 +22,15 @@ const navLinks = [
 
 const Navbar = ({ activePage }: NavbarProps) => {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const currentUser = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await AuthService.logout();
     dispatch(logout());
+    toast.success("Logged out successfully");
+    navigate(FRONTEND_ROUTES.LOGIN);
   };
 
   return (
@@ -102,9 +107,9 @@ const Navbar = ({ activePage }: NavbarProps) => {
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         {currentUser ? (
           <div style={{ position: "relative" }}>
-            <div 
-               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-               style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", padding: "4px 8px", borderRadius: 12, transition: "background 0.2s" }}
+            <Link 
+               to={FRONTEND_ROUTES.PATIENT_PROFILE}
+               style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", padding: "4px 8px", borderRadius: 12, transition: "background 0.2s", textDecoration: "none" }}
                onMouseEnter={(e) => e.currentTarget.style.background = theme.blueLight}
                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
             >
@@ -121,71 +126,7 @@ const Navbar = ({ activePage }: NavbarProps) => {
                >
                   <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                </div>
-            </div>
-
-            {isDropdownOpen && (
-               <div style={{
-                  position: "absolute",
-                  top: "calc(100% + 8px)",
-                  right: 0,
-                  background: "white",
-                  borderRadius: 12,
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                  border: `1px solid ${theme.border}`,
-                  padding: "8px",
-                  minWidth: "180px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 4,
-                  zIndex: 1000
-               }}>
-                  <Link
-                     to={FRONTEND_ROUTES.RESET_PASSWORD_LOGGED_IN}
-                     onClick={() => setIsDropdownOpen(false)}
-                     style={{
-                        padding: "10px 12px",
-                        borderRadius: 8,
-                        textDecoration: "none",
-                        color: theme.sub,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        transition: "all 0.2s"
-                     }}
-                     onMouseEnter={(e) => { e.currentTarget.style.background = theme.blueLight; e.currentTarget.style.color = theme.blue; }}
-                     onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = theme.sub; }}
-                  >
-                     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                     Change Password
-                  </Link>
-                  <button 
-                     onClick={() => { setIsDropdownOpen(false); handleLogout(); }}
-                     style={{
-                        padding: "10px 12px",
-                        borderRadius: 8,
-                        border: "none",
-                        background: "transparent",
-                        color: theme.sub,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        cursor: "pointer",
-                        width: "100%",
-                        textAlign: "left",
-                        transition: "all 0.2s"
-                     }}
-                     onMouseEnter={(e) => { e.currentTarget.style.background = theme.blueLight; e.currentTarget.style.color = theme.blue; }}
-                     onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = theme.sub; }}
-                  >
-                     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                     Logout
-                  </button>
-               </div>
-            )}
+            </Link>
           </div>
         ) : (
           <>

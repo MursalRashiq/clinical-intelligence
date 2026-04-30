@@ -33,7 +33,7 @@ const UserSchema = new Schema<IUserDocument>(
     },
     passwordHash: {
       type: String,
-      required: true,
+      required: false,
     },
     googleId: {
       type: String,
