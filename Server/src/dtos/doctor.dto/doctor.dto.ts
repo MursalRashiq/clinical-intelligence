@@ -24,13 +24,13 @@ export interface DoctorResponseDTO extends BaseUserResponseDTO {
   gender?: string | null;
   dob?: string | null;
   verificationStatus: VerificationStatus
-  rejectionReason?: string | null;
-  licenseNumber?: string | null;
+  rejectionReason?: string | null | undefined;
+  licenseNumber?: string | null | undefined;
   qualifications: string[];
   specialty?: string | null;
-  experienceYears?: number | null;
-  VideoFees?: number | null;
-  ChatFees?: number | null;
+  experienceYears?: number | null | undefined;
+  VideoFees?: number | null | undefined;
+  ChatFees?: number | null | undefined;
   languages: string[];
   ratingAvg: number;
   ratingCount: number;
@@ -50,10 +50,10 @@ export interface VerificationFormDataDTO {
   speciality: string;
   videoFees: number;
   chatFees: number;
-  licenseNumber?: string | null;
+  licenseNumber?: string | null | undefined;
   languages: string[];
   verificationStatus: VerificationStatus;
-  rejectionReason?: string | null;
+  rejectionReason?: string | null | undefined;
   verificationDocuments: string[];
   canResubmit: boolean;
 }

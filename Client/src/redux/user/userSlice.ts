@@ -25,6 +25,8 @@ export interface UserProfile {
     createdAt?: string;
     updatedAt?: string;
     doctorProfileId?: string;
+    verificationStatus?: string;
+    rejectionReason?: string;
 }
 
 interface UserState {

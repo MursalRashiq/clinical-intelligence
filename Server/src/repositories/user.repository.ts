@@ -22,13 +22,14 @@ export class UserRepository extends BaseRepository<IUserDocument> implements IUs
     }
 
     async findByPhone(phone: string): Promise<IUserDocument | null> {
+        if (!phone) return null;
         return await this.model.findOne({
             phone, isActive: true
         });
     }
 
     async existsByEmail(email: string): Promise<boolean> {
-        return await this.existsByEmail(email);
+        return await this.existsByField("email", email);
     }
 
     async existsByPhone(phone: string): Promise<boolean> {

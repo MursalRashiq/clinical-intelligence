@@ -20,7 +20,7 @@ import { theme as t } from "../../theme";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import { useDispatch } from "react-redux";
 import { logoutAdmin } from "../../redux/admin/adminSlice";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services/AdminService";
 
 interface SidebarProps {
   onMobileClose?: () => void;
@@ -28,8 +28,8 @@ interface SidebarProps {
 
 const sidebarItems = [
   { label: "Dashboard", icon: BarChart2, path: FRONTEND_ROUTES.ADMIN_DASHBOARD },
-  { label: "Doctor Request", icon: Zap, path: "/admin/doctor-request", hasNotification: true },
-  { label: "Doctors", icon: Stethoscope, path: "/admin/doctors" },
+  { label: "Doctor Request", icon: Zap, path: FRONTEND_ROUTES.ADMIN_DOCTOR_REQUESTS, hasNotification: true },
+  { label: "Doctors", icon: Stethoscope, path: FRONTEND_ROUTES.ADMIN_DOCTORS },
   { label: "Patients", icon: Users, path: FRONTEND_ROUTES.ADMIN_PATIENTS },
   { label: "Appointments", icon: Calendar, path: "/admin/appointments" },
   { label: "Speciality", icon: Grid, path: "/admin/speciality" },

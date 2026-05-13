@@ -17,13 +17,15 @@ export class AuthValidator {
             throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
         }
 
-        const phoneDigits = data.phone.replace(/\D/g, "");
-        if (phoneDigits.length < 10 || phoneDigits.length > 15) {
-            throw new ValidationError(MESSAGES.INVALID_PHONE_NUMBER);
-        }
-        const last10 = phoneDigits.slice(-10);
-        if (/^(\d)\1{9}$/.test(last10)) {
-            throw new ValidationError("Phone number cannot be all the same digit");
+        if (data.phone) {
+            const phoneDigits = data.phone.replace(/\D/g, "");
+            if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+                throw new ValidationError(MESSAGES.INVALID_PHONE_NUMBER);
+            }
+            const last10 = phoneDigits.slice(-10);
+            if (/^(\d)\1{9}$/.test(last10)) {
+                throw new ValidationError("Phone number cannot be all the same digit");
+            }
         }
 
         if (!data.name || data.name.trim().length < 2) {

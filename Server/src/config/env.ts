@@ -83,4 +83,21 @@ export const env = {
     get GOOGLE_CALLBACK_URL() {
         return process.env.GOOGLE_CALLBACK_URL ||  ""
     },
+
+    get AWS_ACCESS_KEY_ID(){
+        return process.env.AWS_ACCESS_KEY_ID
+    },
+
+    get AWS_SECRET_ACCESS_KEY() {
+        return process.env.AWS_SECRET_ACCESS_KEY
+    },
+
+    get AWS_REGION(){
+        return process.env.AWS_REGION
+    },
+
+    get AWS_BUCKET_NAME(){
+        return process.env.AWS_BUCKET_NAME
+    }
+    
 }

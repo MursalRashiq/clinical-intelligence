@@ -1,33 +1,12 @@
 import { useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { FRONTEND_ROUTES, DOCTOR_API_ROUTES, USER_ROLES } from "../../utils/constants";
+import axiosInstance from "../../api/axiosInstance";
+import { type FormData } from "../../types/doctor.type";
+import { toast } from "sonner";
 
-// ── Types ────────────────────────────────────────────────────────────────────
 type Step = 1 | 2 | 3 | 4 | 5;
 
-interface FormData {
-  // Step 1 – Registration
-  name: string;
-  phone: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  // Step 2 – Verification
-  medicalSchool: string;
-  degree: string;
-  graduationYear: string;
-  yearsOfPractice: string;
-  previousAffiliation: string;
-  primarySpecialty: string;
-  customSpecialty: string;
-  // Step 3 – Specialty (reuses Step 2 specialty fields, step 3 is just specialty)
-  // Step 4 – Fees
-  videoFee: string;
-  videoEnabled: boolean;
-  chatFee: string;
-  chatEnabled: boolean;
-  // Step 5 – Documents
-  medicalLicense: File | null;
-  degreeCertificate: File | null;
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const SignatureGradient =
@@ -102,6 +81,42 @@ function Input({
   );
 }
 
+function PasswordInput({
+  icon,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { icon?: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      {icon && (
+        <MaterialIcon
+          name={icon}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+        />
+      )}
+      <input
+        {...props}
+        type={show ? "text" : "password"}
+        className={`w-full rounded-t-lg px-4 py-3 text-sm outline-none transition-all
+          border-b-2 border-transparent focus:border-[#1560E8]
+          ${icon ? "pl-12" : ""} pr-12`}
+        style={{
+          background: "#e1e2ed",
+          color: "#191b23",
+          fontFamily: "Inter, sans-serif",
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1560E8] transition-colors bg-transparent border-none p-0 cursor-pointer flex items-center"
+      >
+        <MaterialIcon name={show ? "visibility" : "visibility_off"} />
+      </button>
+    </div>
+  );
+}
+
 function Select({
   children,
   ...props
@@ -169,79 +184,47 @@ function StepRegistration({
   data: FormData;
   onChange: (k: keyof FormData, v: string) => void;
 }) {
-  const [codeIndex, setCodeIndex] = useState(0);
-  const codes = [
-    { f: "🇮🇳", c: "+91" },
-    { f: "🇺🇸", c: "+1" },
-    { f: "🇬🇧", c: "+44" },
-    { f: "🇦🇺", c: "+61" },
-    { f: "🇦🇪", c: "+971" },
-    { f: "🇨🇦", c: "+1" },
-  ];
-  const cycleCode = () => setCodeIndex((i) => (i + 1) % codes.length);
-
+  const navigate = useNavigate();
   return (
     <div className="w-full flex flex-col gap-0">
       {/* Hero */}
-      <div className="mb-10 text-center">
+      <div className="mb-10">
         <span
           className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase mb-4"
-          style={{ background: "linear-gradient(135deg,#58b9fd,#1560E8)", color: "#fff" }}
+          style={{ background: "#58b9fd", color: "#00476d" }}
         >
-          Step 01 / 05 — Account Setup
+          Step 01 / 05
         </span>
         <h1
           className="text-4xl lg:text-5xl font-extrabold tracking-tight mb-4"
-          style={{ fontFamily: "Manrope, sans-serif", background: "linear-gradient(135deg,#0A2D78,#1560E8,#1A8FD1)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+          style={{ fontFamily: "Manrope, sans-serif", color: "#191b23" }}
         >
           Create your clinical profile.
         </h1>
-        <p className="text-lg leading-relaxed max-w-md mx-auto" style={{ color: "#424655" }}>
-          Join the leading network of specialized medical professionals.
-          Your secure digital sanctuary awaits.
+        <p className="text-lg leading-relaxed max-w-md" style={{ color: "#424655" }}>
+          Join the leading network of specialized medical professionals. Secure
+          your digital sanctuary.
         </p>
       </div>
 
       {/* Form grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
         <div>
-          <FieldLabel>Full Name</FieldLabel>
+          <FieldLabel>First Name</FieldLabel>
           <Input
-            icon="person"
             placeholder="Enter full name"
-            value={data.name}
-            onChange={(e) => onChange("name", e.target.value)}
+            value={data.Name}
+            onChange={(e) => onChange("Name", e.target.value)}
           />
         </div>
-        <div>
-          <FieldLabel>Phone Number</FieldLabel>
-          <div className="relative flex w-full">
-            <div
-              className="flex items-center gap-2 px-3 cursor-pointer rounded-tl-lg border-b-2 border-transparent transition-all shrink-0"
-              style={{ background: "#e1e2ed", color: "#191b23", fontFamily: "Inter, sans-serif" }}
-              onClick={cycleCode}
-              title="Tap to change country"
-            >
-              <span>{codes[codeIndex].f}</span>
-              <span className="font-semibold text-sm">{codes[codeIndex].c}</span>
-              <MaterialIcon name="arrow_drop_down" className="text-gray-500" />
-            </div>
-            <input
-              type="tel"
-              maxLength={15}
-              placeholder="98765 43210"
-              value={data.phone}
-              onChange={(e) => onChange("phone", e.target.value)}
-              className="w-full rounded-tr-lg px-4 py-3 text-sm outline-none transition-all border-b-2 border-transparent focus:border-[#1560E8] min-w-0"
-              style={{
-                background: "#e1e2ed",
-                color: "#191b23",
-                fontFamily: "Inter, sans-serif",
-                borderLeft: "1px solid rgba(195,198,215,0.3)"
-              }}
-            />
-          </div>
-        </div>
+        {/* <div>
+          <FieldLabel>Last Name</FieldLabel>
+          <Input
+            placeholder="Enter last name"
+            value={data.lastName}
+            onChange={(e) => onChange("lastName", e.target.value)}
+          />
+        </div> */}
         <div className="md:col-span-2">
           <FieldLabel>Professional Email</FieldLabel>
           <Input
@@ -252,11 +235,20 @@ function StepRegistration({
             onChange={(e) => onChange("email", e.target.value)}
           />
         </div>
+        <div className="md:col-span-2">
+          <FieldLabel>Phone Number</FieldLabel>
+          <Input
+            icon="phone"
+            type="tel"
+            placeholder="+91 (555) 000-0000"
+            value={data.phone}
+            onChange={(e) => onChange("phone", e.target.value)}
+          />
+        </div>
         <div>
           <FieldLabel>Create Password</FieldLabel>
-          <Input
+          <PasswordInput
             icon="lock"
-            type="password"
             placeholder="••••••••"
             value={data.password}
             onChange={(e) => onChange("password", e.target.value)}
@@ -264,14 +256,28 @@ function StepRegistration({
         </div>
         <div>
           <FieldLabel>Confirm Password</FieldLabel>
-          <Input
+          <PasswordInput
             icon="verified"
-            type="password"
             placeholder="••••••••"
             value={data.confirmPassword}
             onChange={(e) => onChange("confirmPassword", e.target.value)}
           />
         </div>
+      </div>
+
+      {/* Login redirect */}
+      <div className="mt-8">
+        <p className="text-sm" style={{ color: "#424655" }}>
+          Already have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate(FRONTEND_ROUTES.DOCTOR_LOGIN)}
+            className="font-bold hover:underline transition-colors"
+            style={{ color: "#1560E8", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+          >
+            Login here
+          </button>
+        </p>
       </div>
 
       {/* Social proof */}
@@ -343,11 +349,11 @@ function StepVerification({
           </div>
           <div className="space-y-6">
             <div>
-              <FieldLabel>Medical School / Institution</FieldLabel>
+              <FieldLabel>Medical License Number</FieldLabel>
               <Input
-                placeholder="e.g. Johns Hopkins School of Medicine"
-                value={data.medicalSchool}
-                onChange={(e) => onChange("medicalSchool", e.target.value)}
+                placeholder="e.g. LIC12345678"
+                value={data.licenseNumber}
+                onChange={(e) => onChange("licenseNumber", e.target.value)}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -357,15 +363,6 @@ function StepVerification({
                   placeholder="e.g. MD, MBBS, DO"
                   value={data.degree}
                   onChange={(e) => onChange("degree", e.target.value)}
-                />
-              </div>
-              <div>
-                <FieldLabel>Graduation Year</FieldLabel>
-                <Input
-                  type="number"
-                  placeholder="YYYY"
-                  value={data.graduationYear}
-                  onChange={(e) => onChange("graduationYear", e.target.value)}
                 />
               </div>
             </div>
@@ -388,7 +385,7 @@ function StepVerification({
               Clinical Experience
             </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <div>
               <FieldLabel>Years of Practice</FieldLabel>
               <Select
@@ -404,14 +401,6 @@ function StepVerification({
                 <option>10-20 years</option>
                 <option>20+ years</option>
               </Select>
-            </div>
-            <div>
-              <FieldLabel>Previous Affiliation</FieldLabel>
-              <Input
-                placeholder="e.g. Mayo Clinic"
-                value={data.previousAffiliation}
-                onChange={(e) => onChange("previousAffiliation", e.target.value)}
-              />
             </div>
           </div>
         </div>
@@ -474,9 +463,9 @@ function StepSpecialty({
                 Select your area of expertise
               </option>
               {[
-                "Cardiology","Dermatology","Emergency Medicine","Endocrinology",
-                "Gastroenterology","Internal Medicine","Neurology",
-                "Obstetrics & Gynecology","Oncology","Pediatrics","Psychiatry",
+                "Cardiology", "Dermatology", "Emergency Medicine", "Endocrinology",
+                "Gastroenterology", "Internal Medicine", "Neurology",
+                "Obstetrics & Gynecology", "Oncology", "Pediatrics", "Psychiatry",
                 "Surgery",
               ].map((s) => (
                 <option key={s}>{s}</option>
@@ -497,6 +486,22 @@ function StepSpecialty({
               placeholder="Specify your specialty if not listed above"
               value={data.customSpecialty}
               onChange={(e) => onChange("customSpecialty", e.target.value)}
+            />
+          </div>
+          <div>
+            <FieldLabel>Professional Bio / About</FieldLabel>
+            <textarea
+              className="w-full rounded-lg px-4 py-3 text-sm outline-none transition-all border-2 border-transparent focus:border-[#1560E8]"
+              style={{
+                background: "#f2f3fe",
+                color: "#191b23",
+                fontFamily: "Inter, sans-serif",
+                minHeight: "120px",
+                resize: "vertical"
+              }}
+              placeholder="Tell patients about your background, approach to care, and expertise..."
+              value={data.about}
+              onChange={(e) => onChange("about", e.target.value)}
             />
           </div>
         </div>
@@ -659,7 +664,7 @@ function StepFees({
               </span>
               , the average consultation fee is{" "}
               <span className="font-bold" style={{ color: "#334e99" }}>
-                $105 – $150
+                ₹500 – ₹2500
               </span>
               .
             </p>
@@ -667,7 +672,7 @@ function StepFees({
               <div className="flex justify-between text-xs">
                 <span style={{ color: "#424655" }}>Your Average Fee</span>
                 <span className="font-bold" style={{ color: "#191b23" }}>
-                  ${data.videoFee || "0.00"}
+                  ₹{data.videoFee || "0.00"}
                 </span>
               </div>
               <div
@@ -701,7 +706,7 @@ function StepFees({
         </div>
 
         {/* Chat */}
-        <div
+        {/* <div
           className="lg:col-span-5 rounded-xl p-8 border transition-all hover:shadow-xl"
           style={{
             background: "#fff",
@@ -758,7 +763,7 @@ function StepFees({
               />
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
@@ -774,18 +779,18 @@ function StepDocuments({
 }) {
   const handleDrop =
     (key: "medicalLicense" | "degreeCertificate") =>
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files?.[0] ?? null;
-      if (file) onFile(key, file);
-    };
+      (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files?.[0] ?? null;
+        if (file) onFile(key, file);
+      };
 
   const handleFileInput =
     (key: "medicalLicense" | "degreeCertificate") =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0] ?? null;
-      if (file) onFile(key, file);
-    };
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null;
+        if (file) onFile(key, file);
+      };
 
   return (
     <div>
@@ -1028,223 +1033,28 @@ function StepDocuments({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function DoctorOnboarding() {
-  const doctorStyles = `
-    .flex { display: flex; }
-    .flex-col { flex-direction: column; }
-    .flex-row { flex-direction: row; }
-    .items-center { align-items: center; }
-    .items-start { align-items: flex-start; }
-    .items-end { align-items: flex-end; }
-    .justify-center { justify-content: center; }
-    .justify-between { justify-content: space-between; }
-    .shrink-0 { flex-shrink: 0; }
-    .flex-1 { flex: 1 1 0%; }
-    .hidden { display: none; }
-    
-    .grid { display: grid; }
-    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    
-    .w-full { width: 100%; }
-    .h-full { height: 100%; }
-    .w-10 { width: 2.5rem; }
-    .h-10 { height: 2.5rem; }
-    .w-12 { width: 3rem; }
-    .h-12 { height: 3rem; }
-    .w-16 { width: 4rem; }
-    .h-16 { height: 4rem; }
-    .w-64 { width: 16rem; }
-    .w-80 { width: 20rem; }
-    .max-w-md { max-width: 28rem; }
-    .max-w-2xl { max-width: 42rem; }
-    .max-w-3xl { max-width: 48rem; }
-    .max-w-4xl { max-width: 56rem; }
-    
-    .gap-0 { gap: 0; }
-    .gap-1 { gap: 0.25rem; }
-    .gap-2 { gap: 0.5rem; }
-    .gap-3 { gap: 0.75rem; }
-    .gap-4 { gap: 1rem; }
-    .gap-6 { gap: 1.5rem; }
-    .gap-8 { gap: 2rem; }
-    .gap-x-8 { column-gap: 2rem; }
-    .gap-y-6 { row-gap: 1.5rem; }
-    
-    .p-4 { padding: 1rem; }
-    .p-6 { padding: 1.5rem; }
-    .p-8 { padding: 2rem; }
-    .p-10 { padding: 2.5rem; }
-    .p-12 { padding: 3rem; }
-    .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
-    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-    .px-4 { padding-left: 1rem; padding-right: 1rem; }
-    .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
-    .px-10 { padding-left: 2.5rem; padding-right: 2.5rem; }
-    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-    .py-1.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
-    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
-    .pt-2 { padding-top: 0.5rem; }
-    .pt-6 { padding-top: 1.5rem; }
-    .pt-8 { padding-top: 2rem; }
-    
-    .mb-1 { margin-bottom: 0.25rem; }
-    .mb-2 { margin-bottom: 0.5rem; }
-    .mb-3 { margin-bottom: 0.75rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    .mb-5 { margin-bottom: 1.25rem; }
-    .mb-6 { margin-bottom: 1.5rem; }
-    .mb-8 { margin-bottom: 2rem; }
-    .mb-10 { margin-bottom: 2.5rem; }
-    .mt-1 { margin-top: 0.25rem; }
-    .mt-2 { margin-top: 0.5rem; }
-    .mt-4 { margin-top: 1rem; }
-    .mt-6 { margin-top: 1.5rem; }
-    .mt-8 { margin-top: 2rem; }
-    .mt-10 { margin-top: 2.5rem; }
-    .mt-12 { margin-top: 3rem; }
-    .mt-auto { margin-top: auto; }
-    
-    .rounded-full { border-radius: 9999px; }
-    .rounded-lg { border-radius: 0.5rem; }
-    .rounded-xl { border-radius: 0.75rem; }
-    .rounded-2xl { border-radius: 1rem; }
-    .rounded-3xl { border-radius: 1.5rem; }
-    
-    .text-[10px] { font-size: 0.625rem; }
-    .text-xs { font-size: 0.75rem; }
-    .text-sm { font-size: 0.875rem; }
-    .text-base { font-size: 1rem; }
-    .text-lg { font-size: 1.125rem; }
-    .text-xl { font-size: 1.25rem; }
-    .text-2xl { font-size: 1.5rem; }
-    .text-3xl { font-size: 1.875rem; }
-    .text-4xl { font-size: 2.25rem; }
-    
-    .font-medium { font-weight: 500; }
-    .font-semibold { font-weight: 600; }
-    .font-bold { font-weight: 700; }
-    .font-extrabold { font-weight: 800; }
-    
-    .tracking-tight { letter-spacing: -0.025em; }
-    .tracking-wider { letter-spacing: 0.05em; }
-    .tracking-widest { letter-spacing: 0.1em; }
-    .tracking-tighter { letter-spacing: -0.05em; }
-    
-    .leading-relaxed { line-height: 1.625; }
-    .leading-tight { line-height: 1.25; }
-    .leading-snug { line-height: 1.375; }
-    
-    .text-center { text-align: center; }
-    .text-left { text-align: left; }
-    
-    .border { border: 1px solid #e1e2ed; }
-    .border-b-2 { border-bottom-width: 2px; }
-    .border-t { border-top: 1px solid #e1e2ed; }
-    .border-r { border-right: 1px solid #e1e2ed; }
-    .border-2 { border-width: 2px; }
-    .border-dashed { border-style: dashed; }
-    .border-transparent { border-color: transparent; }
-    .border-white { border-color: #fff; }
-    
-    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-    .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-    .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-    
-    .bg-white { background-color: #fff; }
-    .bg-blue-50 { background-color: #eff6ff; }
-    .bg-green-600 { background-color: #16a34a; }
-    .bg-gray-50 { background-color: #f9fafb; }
-    
-    .text-white { color: #fff; }
-    .text-blue-500 { color: #3b82f6; }
-    .text-green-600 { color: #16a34a; }
-    .text-yellow-500 { color: #eab308; }
-    .text-gray-400 { color: #9ca3af; }
-    .text-gray-500 { color: #6b7280; }
-    
-    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .shrink-0 { flex-shrink: 0; }
-    
-    .mx-auto { margin-left: auto; margin-right: auto; }
-    .sticky { position: sticky; }
-    .top-0 { top: 0; }
-    .z-50 { z-index: 50; }
-    .z-10 { z-index: 10; }
-    .relative { position: relative; }
-    .absolute { position: absolute; }
-    .-top-20 { top: -5rem; }
-    .-right-20 { right: -5rem; }
-    .bottom-20 { bottom: 5rem; }
-    .-left-16 { left: -4rem; }
-    .blur-3xl { filter: blur(64px); }
-    .pointer-events-none { pointer-events: none; }
-    .overflow-hidden { overflow: hidden; }
-    .overflow-y-auto { overflow-y: auto; }
-    .min-h-screen { min-height: 100vh; }
-    .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-    .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-    .duration-500 { transition-duration: 500ms; }
-    
-    .cursor-pointer { cursor: pointer; }
-    
-    @media (min-width: 768px) {
-      .md\:flex { display: flex; }
-      .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .md\:col-span-2 { grid-column: span 2 / span 2; }
-      .md\:flex-row { flex-direction: row; }
-      .md\:items-center { align-items: center; }
-      .md\:w-48 { width: 12rem; }
-      .md\:mt-0 { margin-top: 0; }
-    }
-    
-    @media (min-width: 1024px) {
-      .lg\:flex { display: flex; }
-      .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-      .lg\:col-span-12 { grid-column: span 12 / span 12; }
-      .lg\:col-span-8 { grid-column: span 8 / span 8; }
-      .lg\:col-span-7 { grid-column: span 7 / span 7; }
-      .lg\:col-span-5 { grid-column: span 5 / span 5; }
-      .lg\:col-span-4 { grid-column: span 4 / span 4; }
-      .lg\:text-5xl { font-size: 3rem; }
-      .lg\:p-12 { padding: 3rem; }
-    }
-    
-    @media (min-width: 1280px) {
-      .xl\:block { display: block; }
-    }
-    
-    .material-symbols-outlined {
-      font-family: 'Material Symbols Outlined';
-      font-weight: normal;
-      font-style: normal;
-      font-size: 24px;
-      line-height: 1;
-      letter-spacing: normal;
-      text-transform: none;
-      display: inline-block;
-      white-space: nowrap;
-      word-wrap: normal;
-      direction: ltr;
-      -webkit-font-smoothing: antialiased;
-    }
-  `;
-  const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    phone: "",
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // Initialize step from query param if available
+  const stepParam = searchParams.get("step");
+  const initialStep = stepParam ? (parseInt(stepParam) as Step) : 1;
+
+  const [currentStep, setCurrentStep] = useState<Step>(initialStep);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>(location.state?.formData || {
+    Name: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
-    medicalSchool: "",
+    licenseNumber: "",
     degree: "",
-    graduationYear: "",
     yearsOfPractice: "",
-    previousAffiliation: "",
     primarySpecialty: "",
     customSpecialty: "",
+    about: "",
     videoFee: "120.00",
     videoEnabled: true,
     chatFee: "45.00",
@@ -1252,6 +1062,47 @@ export default function DoctorOnboarding() {
     medicalLicense: null,
     degreeCertificate: null,
   });
+
+  const isStepComplete = (stepId: number): boolean => {
+    switch (stepId) {
+      case 1:
+        return (
+          formData.Name.trim() !== "" &&
+          formData.email.trim() !== "" &&
+          formData.phone.trim() !== "" &&
+          formData.password !== "" &&
+          formData.password === formData.confirmPassword
+        );
+      case 2:
+        return (
+          formData.licenseNumber.trim() !== "" &&
+          formData.degree.trim() !== "" &&
+          formData.yearsOfPractice.trim() !== ""
+        );
+      case 3:
+        return (
+          formData.primarySpecialty.trim() !== "" &&
+          (formData.primarySpecialty !== "other" || formData.customSpecialty.trim() !== "") &&
+          formData.about.trim() !== ""
+        );
+      case 4:
+        const videoOk = !formData.videoEnabled || formData.videoFee.trim() !== "";
+        const chatOk = !formData.chatEnabled || formData.chatFee.trim() !== "";
+        return videoOk && chatOk && (formData.videoEnabled || formData.chatEnabled);
+      case 5:
+        return formData.medicalLicense !== null && formData.degreeCertificate !== null;
+      default:
+        return true;
+    }
+  };
+
+  const canNavigateTo = (targetStep: number) => {
+    if (targetStep <= currentStep) return true;
+    for (let i = 1; i < targetStep; i++) {
+      if (!isStepComplete(i)) return false;
+    }
+    return true;
+  };
 
   const handleChange = (key: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -1273,7 +1124,6 @@ export default function DoctorOnboarding() {
 
   return (
     <>
-      <style>{doctorStyles}</style>
       {/* Load Material Symbols + fonts */}
       <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -1286,20 +1136,12 @@ export default function DoctorOnboarding() {
 
       <div
         className="min-h-screen flex flex-col"
-        style={{
-          background: "linear-gradient(135deg, #050d1f 0%, #0c1e4a 40%, #0e2a6e 70%, #0f1e45 100%)",
-          fontFamily: "Inter, sans-serif",
-          minHeight: "100vh",
-        }}
+        style={{ background: "#faf8ff", fontFamily: "Inter, sans-serif" }}
       >
         {/* ── Top Nav ───────────────────────────────────────────────────────── */}
         <header
-          className="w-full sticky top-0 z-50"
-          style={{
-            background: "rgba(5,13,31,0.85)",
-            backdropFilter: "blur(16px)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
+          className="w-full sticky top-0 z-50 shadow-sm"
+          style={{ background: "#FAF8FF" }}
         >
           <div className="flex justify-between items-center px-6 py-4 max-w-full mx-auto">
             <div className="flex items-center gap-8">
@@ -1320,7 +1162,11 @@ export default function DoctorOnboarding() {
                     key={link}
                     href="#"
                     className="text-sm font-semibold transition-colors"
-                    style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Manrope, sans-serif", textDecoration: "none" }}
+                    style={{
+                      color: "#424655",
+                      fontFamily: "Manrope, sans-serif",
+                      textDecoration: "none",
+                    }}
                   >
                     {link}
                   </a>
@@ -1328,27 +1174,31 @@ export default function DoctorOnboarding() {
               </nav>
             </div>
             <div className="flex items-center gap-4">
-              <button style={{ color: "rgba(255,255,255,0.6)" }}>
+              <button style={{ color: "#334e99" }}>
                 <MaterialIcon name="notifications" />
               </button>
-              <button style={{ color: "rgba(255,255,255,0.6)" }}>
+              <button style={{ color: "#334e99" }}>
                 <MaterialIcon name="account_circle" />
               </button>
             </div>
           </div>
+          <div style={{ height: 1, background: "#F2F3FE" }} />
         </header>
 
         <div className="flex flex-1 overflow-hidden">
           {/* ── Sidebar ─────────────────────────────────────────────────────── */}
           <aside
-            className="hidden lg:flex flex-col gap-2 p-4 pt-8 w-64 shrink-0"
+            className="hidden lg:flex flex-col gap-2 p-4 pt-8 w-64 shrink-0 border-r"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              borderRight: "1px solid rgba(255,255,255,0.08)",
+              background: "#F2F3FE",
+              borderColor: "rgba(195,198,215,0.3)",
             }}
           >
             <div className="mb-8 px-2">
-              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <p
+                className="text-xs"
+                style={{ color: "#424655" }}
+              >
                 Onboarding Progress
               </p>
             </div>
@@ -1360,22 +1210,40 @@ export default function DoctorOnboarding() {
                 return (
                   <button
                     key={step.id}
-                    onClick={() => setCurrentStep(step.id as Step)}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all"
+                    onClick={() => {
+                      if (canNavigateTo(step.id)) {
+                        setCurrentStep(step.id as Step);
+                      }
+                    }}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all ${!canNavigateTo(step.id) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                    disabled={!canNavigateTo(step.id)}
                     style={{
-                      background: isActive ? "rgba(21,96,232,0.2)" : "transparent",
-                      color: isActive ? "#58b9fd" : isDone ? "#4ade80" : "rgba(255,255,255,0.45)",
+                      background: isActive ? "#fff" : "transparent",
+                      color: isActive
+                        ? "#1560E8"
+                        : isDone
+                          ? "#006495"
+                          : "#424655",
                       fontWeight: isActive ? 700 : 500,
-                      boxShadow: isActive ? "0 0 0 1px rgba(88,185,253,0.3)" : "none",
+                      boxShadow: isActive
+                        ? "0 1px 3px rgba(0,0,0,0.08)"
+                        : "none",
                       fontFamily: "Inter, sans-serif",
                       fontSize: 14,
                       border: "none",
-                      cursor: "pointer",
                     }}
                   >
                     <MaterialIcon
                       name={isDone ? "check_circle" : step.icon}
                       fill={isActive || isDone}
+                      className={
+                        isDone
+                          ? "text-[#006495]"
+                          : isActive
+                            ? "text-[#1560E8]"
+                            : ""
+                      }
                     />
                     <span>{step.label}</span>
                   </button>
@@ -1387,20 +1255,32 @@ export default function DoctorOnboarding() {
             <div
               className="mt-auto p-4 rounded-xl"
               style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(225,226,237,0.4)",
+                border: "1px solid rgba(195,198,215,0.2)",
               }}
             >
-              <div className="text-[10px] uppercase tracking-widest font-bold mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <div
+                className="text-[10px] uppercase tracking-widest font-bold mb-2"
+                style={{ color: "#424655" }}
+              >
                 Progress
               </div>
-              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <div
+                className="w-full h-1.5 rounded-full overflow-hidden"
+                style={{ background: "#d9d9e5" }}
+              >
                 <div
                   className="h-full rounded-full transition-all duration-500"
-                  style={{ background: SignatureGradient, width: `${progress}%` }}
+                  style={{
+                    background: SignatureGradient,
+                    width: `${progress}%`,
+                  }}
                 />
               </div>
-              <div className="text-xs mt-2 font-bold" style={{ color: "#58b9fd" }}>
+              <div
+                className="text-xs mt-2 font-bold"
+                style={{ color: "#334e99" }}
+              >
                 Step {currentStep} of 5
               </div>
             </div>
@@ -1409,33 +1289,33 @@ export default function DoctorOnboarding() {
             <div
               className="p-4 rounded-xl mt-2"
               style={{
-                background: "rgba(88,185,253,0.08)",
-                border: "1px solid rgba(88,185,253,0.2)",
+                background: "rgba(255,255,255,0.7)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.3)",
               }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <MaterialIcon name="support_agent" className="" style={{ color: "#58b9fd" }} />
-                <span className="text-xs font-semibold" style={{ color: "#58b9fd" }}>Need Help?</span>
+                <MaterialIcon name="info" className="text-[#334e99]" />
+                <span
+                  className="text-xs font-semibold"
+                  style={{ color: "#334e99" }}
+                >
+                  Need Help?
+                </span>
               </div>
-              <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Our concierge team is available 24/7 to assist with your medical credentialing.
+              <p
+                className="text-[10px] leading-relaxed"
+                style={{ color: "#424655" }}
+              >
+                Our concierge team is available 24/7 to assist with your
+                medical credentialing.
               </p>
             </div>
           </aside>
 
           {/* ── Main Canvas ─────────────────────────────────────────────────── */}
           <main className="flex-1 overflow-y-auto p-6 lg:p-12">
-            <div className="max-w-3xl mx-auto">
-              {/* Glass Card Wrapper */}
-              <div
-                style={{
-                  background: "rgba(255,255,255,0.95)",
-                  borderRadius: 24,
-                  boxShadow: "0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)",
-                  padding: "48px 48px 36px",
-                  marginBottom: 32,
-                }}
-              >
+            <div className="max-w-4xl mx-auto">
               {/* Step content */}
               {currentStep === 1 && (
                 <StepRegistration data={formData} onChange={handleChange} />
@@ -1459,17 +1339,19 @@ export default function DoctorOnboarding() {
 
               {/* ── Navigation Buttons ───────────────────────────────────────── */}
               <div
-                className="mt-10 pt-6 flex items-center justify-between"
+                className="mt-12 pt-8 flex items-center justify-between"
                 style={{ borderTop: "1px solid rgba(195,198,215,0.2)" }}
               >
                 <button
-                  onClick={() => setCurrentStep((s) => Math.max(1, s - 1) as Step)}
-                  className="flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all"
+                  onClick={() =>
+                    setCurrentStep((s) => Math.max(2, s - 1) as Step)
+                  }
+                  className="flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all hover:translate-x-[-4px]"
                   style={{
                     color: "#405AA6",
                     fontFamily: "Manrope, sans-serif",
-                    opacity: currentStep === 1 ? 0 : 1,
-                    pointerEvents: currentStep === 1 ? "none" : "auto",
+                    opacity: currentStep <= 2 ? 0 : 1,
+                    pointerEvents: currentStep <= 2 ? "none" : "auto",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
@@ -1480,21 +1362,83 @@ export default function DoctorOnboarding() {
                 </button>
 
                 <button
-                  onClick={() => { if (!isLast) setCurrentStep((s) => Math.min(5, s + 1) as Step); }}
-                  className="flex items-center gap-3 px-10 py-4 rounded-xl text-white font-bold text-sm uppercase tracking-widest transition-all active:scale-95"
+                  onClick={async () => {
+                    if (isStepComplete(currentStep)) {
+                      if (!isLast) {
+                        if (currentStep === 1) {
+                          // Call register API to check if email exists and send OTP
+                          try {
+                            setLoading(true);
+                            await axiosInstance.post(DOCTOR_API_ROUTES.REGISTER, {
+                              name: formData.Name,
+                              email: formData.email,
+                              phone: formData.phone,
+                              password: formData.password,
+                              confirmPassword: formData.confirmPassword,
+                              role: USER_ROLES.DOCTOR
+                            });
+                            navigate(FRONTEND_ROUTES.DOCTOR_VERIFY_OTP, { state: { formData } });
+                          } catch (error: any) {
+                            console.error("Registration failed", error);
+                            const msg = error.response?.data?.message || "Registration failed. Please check your details or try again later.";
+                            toast.error(msg);
+                          } finally {
+                            setLoading(false);
+                          }
+                        } else {
+                          setCurrentStep((s) => (s + 1) as Step);
+                        }
+                      } else {
+                        // Final finish - Submit data to backend
+                        try {
+                          setLoading(true);
+                          const submitData = new FormData();
+
+                          // Append regular fields
+                          Object.entries(formData).forEach(([key, value]) => {
+                            if (value !== null && typeof value !== 'object') {
+                              submitData.append(key, String(value));
+                            }
+                          });
+
+                          // Append files
+                          if (formData.medicalLicense) {
+                            submitData.append("medicalLicense", formData.medicalLicense);
+                          }
+                          if (formData.degreeCertificate) {
+                            submitData.append("degreeCertificate", formData.degreeCertificate);
+                          }
+
+                          await axiosInstance.post(DOCTOR_API_ROUTES.SUBMIT_VERIFICATION, submitData, {
+                            headers: {
+                              "Content-Type": "multipart/form-data",
+                            },
+                          });
+
+                          navigate(FRONTEND_ROUTES.DOCTOR_PENDING);
+                        } catch (error) {
+                          console.error("Failed to submit verification", error);
+                          alert("Failed to submit verification. Please try again.");
+                        } finally {
+                          setLoading(false);
+                        }
+                      }
+                    }
+                  }}
+                  className={`flex items-center gap-3 px-10 py-4 rounded-xl text-white font-bold text-sm uppercase tracking-widest shadow-lg transition-all active:scale-95 hover:shadow-xl hover:-translate-y-0.5 ${!isStepComplete(currentStep) ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                    }`}
+                  disabled={!isStepComplete(currentStep)}
                   style={{
-                    background: SignatureGradient,
+                    background: isStepComplete(currentStep) ? SignatureGradient : "#a1a1a1",
                     fontFamily: "Manrope, sans-serif",
                     border: "none",
-                    cursor: "pointer",
-                    boxShadow: "0 8px 32px rgba(21,96,232,0.45)",
+                    boxShadow: isStepComplete(currentStep) ? "0 8px 24px rgba(51,78,153,0.25)" : "none",
                   }}
                 >
-                  {isLast ? "Finish Onboarding" : currentStep === 1 ? "Create Account" : "Save & Continue"}
+                  {loading ? "Submitting..." : isLast ? "Finish Onboarding" : currentStep === 1 ? "Create Account" : "Save & Continue"}
                   <MaterialIcon name="arrow_forward" />
                 </button>
               </div>
-              </div>{/* end glass card */}
             </div>
           </main>
 
@@ -1577,13 +1521,22 @@ export default function DoctorOnboarding() {
         {/* ── Footer ──────────────────────────────────────────────────────────── */}
         <footer
           className="px-6 py-4 flex flex-col md:flex-row justify-between items-center text-xs font-medium"
-          style={{ background: "rgba(0,0,0,0.3)", color: "rgba(255,255,255,0.35)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ background: "#f2f3fe", color: "#737686" }}
         >
           <p>© 2024 Clinical Intelligence Systems. All rights reserved.</p>
           <div className="flex gap-6 mt-2 md:mt-0">
-            {["Privacy Policy", "Terms of Service", "Cookie Settings"].map((link) => (
-              <a key={link} href="#" style={{ textDecoration: "none", color: "inherit" }}>{link}</a>
-            ))}
+            {["Privacy Policy", "Terms of Service", "Cookie Settings"].map(
+              (link) => (
+                <a
+                  key={link}
+                  href="#"
+                  className="hover:text-[#334e99] transition-colors"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  {link}
+                </a>
+              )
+            )}
           </div>
         </footer>
       </div>

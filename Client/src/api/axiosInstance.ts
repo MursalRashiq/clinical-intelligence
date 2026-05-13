@@ -14,30 +14,45 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        let token = localStorage.getItem("authToken");
+        const url = config.url || "";
+        
+        // Check if it's an admin route
+        const isAdminRoute = url.startsWith("/admin") || url.includes("/admin/");
+        
+        let token = isAdminRoute 
+            ? localStorage.getItem("adminToken") 
+            : localStorage.getItem("authToken");
 
-        if (config.url?.startsWith("/admin")) {
-            token = localStorage.getItem("adminToken");
+        // Clean up stringified null/undefined
+        if (token === "null" || token === "undefined") {
+            token = null;
         }
+
+        // IMPORTANT: If sending FormData, remove the default Content-Type header
+        // so the browser can set it with the correct multipart boundary automatically
+        if (config.data instanceof FormData) {
+            delete config.headers["Content-Type"];
+            delete config.headers["Content-type"];
+        }
+
+        console.log(`[Axios Request] ${config.method?.toUpperCase()} ${url}`, {
+            isAdminRoute,
+            tokenValue: token ? `${token.substring(0, 10)}...` : "NONE",
+            hasToken: !!token,
+            authHeader: config.headers?.Authorization ? "Present" : "Missing"
+        });
 
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         
-        console.log("API Request:", {
-            method: config.method?.toUpperCase(),
-            url: config.url,
-            header: config.headers.Authorization? "Bearer token present": "No token",
-            data: config.data,
-        })
-
         return config;
     },
     (error: AxiosError) => {
-        console.error("Request Error:", error);
-        return Promise.reject(error)
+        console.error("Request Interceptor Error:", error);
+        return Promise.reject(error);
     }
-)
+);
 
 axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
@@ -54,59 +69,65 @@ axiosInstance.interceptors.response.use(
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
-            console.error('401 Unauthorized on:', originalRequest.method?.toUpperCase(), originalRequest.url);
-            console.error('401 Response:', error.response.data)
-        }
+            console.warn('[Axios] 401 Unauthorized:', originalRequest.method?.toUpperCase(), originalRequest.url);
 
-        if (
-            error.response?.status === 401 &&
-            !originalRequest._retry &&
-            !originalRequest.url?.includes('/login')
-        ) {
+            // Skip refresh for login / auth endpoints — pass their original error straight back
+            // so the UI can show the correct message (e.g. "Invalid credentials")
+            const isLoginEndpoint = ['/auth/login', '/auth/doctor/login', '/auth/register',
+                '/auth/verify-otp', '/auth/forgot-password', '/auth/reset-password']
+                .some(path => originalRequest.url?.includes(path));
+            if (isLoginEndpoint) {
+                return Promise.reject(error);
+            }
+
+            // Avoid infinite loop if refresh token itself fails
+            if (originalRequest.url?.includes('/refresh-token')) {
+                return Promise.reject(error);
+            }
+
             originalRequest._retry = true;
 
             try {
-                console.log("Cookie before refresh:", document.cookie)
+                console.log("[Axios] Attempting token refresh...");
                 const res = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
                     withCredentials: true,
-                    headers: {
-                        "Content-Type": 'application/json',
-                    },
+                    headers: { "Content-Type": 'application/json' },
                 });
-                console.log("REFRESH TOKEN RESPONSE", res)
 
                 const newToken = res.data?.data?.accessToken;
-                if(!newToken) {
-                    throw new Error('Refresh token response missing accessToken');
+                if (!newToken) {
+                    throw new Error('No access token in refresh response');
                 }
 
-                if (originalRequest.url?.startsWith("/admin")) {
+                const isAdminRoute = originalRequest.url?.startsWith("/admin") || originalRequest.url?.includes("/admin/");
+                if (isAdminRoute) {
                     localStorage.setItem("adminToken", newToken);
                 } else {
                     localStorage.setItem("authToken", newToken);
                 }
-                originalRequest.headers['Authorization'] = `Bearer ${newToken}`
 
-                console.log("NEW TOKEN", newToken);
-                console.log("ORIGINAL REQUEST", originalRequest)
-
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                console.log("[Axios] Token refreshed successfully. Retrying original request...");
                 return axiosInstance(originalRequest);
-            } catch (err) {
-                console.error("Refresh token failed:", err);
-                return Promise.reject(err);
-            }
-        }else if(error.response?.status === 403) {
-            const isLoginRequest = originalRequest.url?.includes('/login')
-
-            console.error('403 Forbidden on:', originalRequest.method?.toUpperCase(), originalRequest.url);
-            console.error('403 Response:', error.response.data)
-
-            if(!isLoginRequest) {
-                console.error('403: Would redirect to login, but suppressed for debugging')
+            } catch (refreshError) {
+                console.error("[Axios] Refresh token failed:", refreshError);
+                // Clear tokens on hard refresh failure
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("adminToken");
+                return Promise.reject(refreshError);
             }
         }
 
-        return Promise.reject(error)
+        if (error.response?.status === 403) {
+            console.error('[Axios] 403 Forbidden — account may be blocked:', originalRequest.url);
+            // Clear all tokens so the user is fully logged out
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("adminToken");
+            // Fire a global event so any component (e.g. profile page) can react
+            window.dispatchEvent(new CustomEvent("user:blocked"));
+        }
+
+        return Promise.reject(error);
     }
 );
 

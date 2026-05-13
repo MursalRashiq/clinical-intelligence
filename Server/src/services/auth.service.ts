@@ -1,4 +1,4 @@
-import { generateToken, generateRefreshToken, verifyRefreshToken} from '../utils/jwt.utils'
+import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.utils'
 import { IAuthService } from "./interface/IAuthService";
 import { IUserRepository } from "../repositories/interface/IUser.repository";
 import { IDoctorRepository } from '../repositories/interface/IDoctor.repository';
@@ -11,6 +11,7 @@ import { ILoggerService } from "./interface/ILogger.service";
 import { UserMapper } from "../mappers/user.mapper";
 import { IUserDocument } from '../types/user.type';
 import { VerificationStatus } from '../dtos/doctor.dto/doctor.dto';
+import { ResolveSchemaOptions } from 'mongoose';
 
 
 export class AuthService implements IAuthService {
@@ -47,31 +48,33 @@ export class AuthService implements IAuthService {
         return { email: data.email };
     }
 
-    async verifyOtp(data: VerifyOtpDTO & { role: "patient" | "doctor" | "admin" }): Promise<AuthResponseDTO<BaseUserResponseDTO>>{
+    async verifyOtp(data: VerifyOtpDTO & { role: typeof ROLES[keyof typeof ROLES] }): Promise<AuthResponseDTO<BaseUserResponseDTO>> {
         const otpRecord = await this._otpService.verifyOtp(data.email, data.otp);
-        console.log(otpRecord, "Hello i'm")
 
         const user = await this._userRepository.create({
             name: otpRecord.userData.name,
             email: otpRecord.userData.email,
             phone: otpRecord.userData.phone,
             passwordHash: otpRecord.userData.passwordHash,
-            role: otpRecord.userData.role as "patient" | "doctor" | "admin",
+            role: otpRecord.userData.role as typeof ROLES[keyof typeof ROLES],
             isActive: true,
         });
 
         let doctorId: string | undefined;
-        if(String(user.role).toLocaleLowerCase() === ROLES.DOCTOR) {
-            const existingDoctor = await this._ensureDoctorProfile(user);
-            doctorId = existingDoctor._id.toString();
+        let verificationStatus: string | undefined;
+
+        if (String(user.role).toLocaleLowerCase() === ROLES.DOCTOR) {
+            const doctor = await this._ensureDoctorProfile(user);
+            doctorId = doctor?._id.toString();
+            verificationStatus = doctor?.verificationStatus || VerificationStatus.Pending;
         }
 
-        const token = generateToken(user, doctorId);
-        const refreshToken = generateRefreshToken(user, doctorId);
+        const token = generateToken(user, doctorId, verificationStatus);
+        const refreshToken = generateRefreshToken(user, doctorId, verificationStatus);
         await this._otpService.deleteOtp(data.email);
 
         return {
-            user: UserMapper.toDTO(user),
+            user: { ...UserMapper.toDTO(user), verificationStatus } as any,
             token,
             refreshToken
         }
@@ -79,30 +82,32 @@ export class AuthService implements IAuthService {
 
     async resendOtp(data: ResendOtpDTO): Promise<void> {
         const existingUser = await this._userRepository.findByEmail(data.email);
-        if(existingUser) {
+        if (existingUser) {
             throw new ConflictError(MESSAGES.EMAIL_ALREADY_REGISTERED)
         }
         await this._otpService.resendOtp(data.email, CONFIG.OTP_EXPIRY_TIME, CONFIG.OTP_RESEND_DELAY_SECONDS)
     }
 
-     async login(data: LoginDTO): Promise<AuthResponseDTO<BaseUserResponseDTO>> {
+    async login(data: LoginDTO): Promise<AuthResponseDTO<BaseUserResponseDTO>> {
         const user = await this._validateLogin(data.email, data.password, data.role);
         let doctorId: string | undefined;
+        let verificationStatus: string | undefined;
 
-         if (String(user.role).toLocaleLowerCase() === ROLES.DOCTOR) {
-            const doctor = await this._doctorRepository.findByUserId(user._id.toString());
+        if (String(user.role).toLocaleLowerCase() === ROLES.DOCTOR) {
+            const doctor = await this._ensureDoctorProfile(user);
             doctorId = doctor?._id.toString();
+            verificationStatus = doctor?.verificationStatus || VerificationStatus.Pending;
         }
 
-        const token = generateToken(user);
-        const refreshToken = generateRefreshToken(user);
-       
+        const token = generateToken(user, doctorId, verificationStatus);
+        const refreshToken = generateRefreshToken(user, doctorId, verificationStatus);
+
         return {
-            user: UserMapper.toDTO(user),
+            user: { ...UserMapper.toDTO(user), verificationStatus } as any,
             token,
             refreshToken
         }
-       
+
     }
 
     async resetPassword(data: ResetPasswordDTO): Promise<void> {
@@ -113,7 +118,7 @@ export class AuthService implements IAuthService {
         const passwordHash = await hashPassword(data.newPassword);
         const user = await this._userRepository.findByEmail(data.email);
 
-        if(!user) {
+        if (!user) {
             throw new NotFoundError(MESSAGES.NOT_FOUND);
         }
 
@@ -138,21 +143,21 @@ export class AuthService implements IAuthService {
 
     async changePassword(data: ChangePasswordDTO): Promise<void> {
         const { userId, oldPassword, newPassword, confirmNewPassword } = data;
-        
+
         validatePasswordsMatch(newPassword, confirmNewPassword);
         validatePassword(newPassword);
 
         const user = await this._userRepository.findById(userId);
-        if(!user) {
+        if (!user) {
             throw new NotFoundError(MESSAGES.USER_NOT_FOUND)
         }
 
-        if(!user.passwordHash) {
+        if (!user.passwordHash) {
             throw new UnauthorizedError(MESSAGES.GOOGLE_SIGNIN_REQUIRED);
         }
 
         const isMatch = await comparePassword(oldPassword, user.passwordHash);
-        if(!isMatch) {
+        if (!isMatch) {
             throw new UnauthorizedError("Incorrect old password");
         }
 
@@ -161,7 +166,7 @@ export class AuthService implements IAuthService {
         }
 
         const passwordHash = await hashPassword(newPassword);
-        await this._userRepository.updateById(userId, {passwordHash})
+        await this._userRepository.updateById(userId, { passwordHash })
     }
 
     async forgotPassword(data: ForgotPasswordDTO): Promise<void> {
@@ -171,13 +176,13 @@ export class AuthService implements IAuthService {
 
         const user = await this._userRepository.findByEmailIncludingInactive(normalizedEmail);
 
-        if(!user) {
+        if (!user) {
 
             this._logger.warn(`[ForgotPassword] User not found (including inactive): ${normalizedEmail}`)
             throw new NotFoundError(MESSAGES.NO_ACCOUNT_FOUND)
         }
 
-        
+
         this._logger.info(`[ForgotPassword] Found user: ${user.email}, role: ${user.role}, active: ${user.isActive}`);
 
         if (!user.isActive) {
@@ -185,8 +190,8 @@ export class AuthService implements IAuthService {
             throw new ForbiddenError(MESSAGES.USER_NOT_ACTIVE)
         }
 
-        if (data.role && user.role !== data.role){
-            
+        if (data.role && user.role !== data.role) {
+
             this._logger.warn(`[ForgotPassword] Role mismatch. Expected: ${data.role}, Actual: ${user.role}`)
 
             if (process.env.NODE_ENV !== "production") {
@@ -213,24 +218,31 @@ export class AuthService implements IAuthService {
                 throw new UnauthorizedError(MESSAGES.NOT_FOUND)
             }
 
-            if(!user.isActive) {
+            if (!user.isActive) {
                 throw new ForbiddenError(MESSAGES.USER_BLOCKED);
             }
-            
-            
-           
 
-            const accessToken = generateToken(user)
-            return {accessToken}
-        }catch (error) {
-            if(error instanceof ForbiddenError) {
+            let doctorId: string | undefined;
+            let verificationStatus: string | undefined;
+
+            if (user.role === ROLES.DOCTOR) {
+                const doctor = await this._doctorRepository.findByUserId(user._id.toString());
+                doctorId = doctor?._id.toString();
+                verificationStatus = doctor?.verificationStatus;
+            }
+
+            const accessToken = generateToken(user, doctorId, verificationStatus)
+            return { accessToken }
+        } catch (error) {
+            if (error instanceof ForbiddenError) {
                 throw error;
             }
             throw new UnauthorizedError(MESSAGES.INVALID_REFRESH_TOKEN);
         }
     }
 
-        async validateGoogleUser(profile: any): Promise<IUserDocument> {
+
+    async validateGoogleUser(profile: any): Promise<IUserDocument> {
         const { id, emails, displayName, photos } = profile;
         const email = emails[0].value;
 
@@ -262,36 +274,46 @@ export class AuthService implements IAuthService {
         return user;
     }
 
-    private async _checkUserDoesNotExist(email: string, phone: string): Promise<void> {
+    private async _checkUserDoesNotExist(email: string, phone?: string): Promise<void> {
         const existingUser = await this._userRepository.findByEmail(email);
-        if(existingUser) {
+        if (existingUser) {
             throw new ConflictError(MESSAGES.USER_EXIST_EMAIL);
         }
 
-        const existingPhone = await this._userRepository.findByPhone(phone);
-        if(existingPhone) {
-            throw new ConflictError(MESSAGES.USER_EXIST_PHONE);
+        if (phone) {
+            const existingPhone = await this._userRepository.findByPhone(phone);
+            if (existingPhone) {
+                throw new ConflictError(MESSAGES.USER_EXIST_PHONE);
+            }
         }
-
     }
 
     private _normalizeGender(gender?: string | Gender): Gender | null {
-        if(!gender) return null;
+        if (!gender) return null;
         const normalized = String(gender).toLowerCase().trim();
-        if(normalized === GENDER.MALE) return GENDER.MALE as Gender;
-        if(normalized === GENDER.FEMALE) return GENDER.FEMALE as Gender;
-        if(normalized === GENDER.OTHER) return GENDER.OTHER as Gender;
+        if (normalized === GENDER.MALE) return GENDER.MALE as Gender;
+        if (normalized === GENDER.FEMALE) return GENDER.FEMALE as Gender;
+        if (normalized === GENDER.OTHER) return GENDER.OTHER as Gender;
         return null;
     }
 
     private async _validateLogin(email: string, password: string, role: string): Promise<IUserDocument> {
-        const user = await this._userRepository.findByEmailIncludingInactive(email);
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await this._userRepository.findByEmailIncludingInactive(normalizedEmail);
 
-        if (!user || user.role !== role ){
+        this._logger.info(`[ValidateLogin] Attempting login for ${normalizedEmail}`, {
+            attemptedRole: role,
+            userFound: !!user,
+            userRole: user?.role,
+            userActive: user?.isActive
+        });
+
+        if (!user || user.role !== role) {
+            this._logger.warn(`[ValidateLogin] Login failed: ${!user ? 'User not found' : 'Role mismatch'}`);
             throw new UnauthorizedError(MESSAGES.INVALID_CREDENTIALS);
         }
 
-        if(!user.isActive) {
+        if (!user.isActive) {
             throw new ForbiddenError(MESSAGES.USER_BLOCKED)
         }
 
@@ -300,16 +322,16 @@ export class AuthService implements IAuthService {
         }
 
         const isValid = await comparePassword(password, user.passwordHash);
-        if(!isValid) {
+        if (!isValid) {
             throw new UnauthorizedError(MESSAGES.INVALID_CREDENTIALS);
         }
-        
+
         return user;
     }
 
     private async _ensureDoctorProfile(user: IUserDocument) {
         let existingDoctor = await this._doctorRepository.findByUserId(user._id.toString());
-        if(!existingDoctor) {
+        if (!existingDoctor) {
             existingDoctor = await this._doctorRepository.create({
                 userId: user._id,
                 licenseNumber: null,

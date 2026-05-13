@@ -8,6 +8,7 @@ export class AdminMapper {
             name: user.name,
             email: user.email,
             role: user.role,
+            isActive: user.isActive,
         }
     }
 }

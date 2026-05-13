@@ -34,4 +34,10 @@ export const requireRole = (...allowedRoles: string[]) => {
 
 export const requireAdmin = requireRole("admin");
 
-export const requiredPatient = requireRole("patient")
+export const requireDoctor = requireRole("doctor");
+
+
+export const requirePatient = requireRole("patient");
+
+export const requireDoctorOrPatient = requireRole("doctor", "patient");
+export const requireAdminOrDoctor = requireRole("admin", "doctor");

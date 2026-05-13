@@ -23,11 +23,11 @@ export interface ResendOtpDTO {
 export interface RegisterDTO {
     name: string,
     email: string;
-    phone: string;
+    phone?: string;
     password: string;
     role: Role,
     confirmPassword: string;
-    gender: Gender
+    gender?: Gender
     dob?: string;
 }
 
@@ -38,7 +38,8 @@ export interface BaseUserResponseDTO {
     role: string;
     profileImage?: string | null;
     phone?: string | null;
-    customId?: string;
+    customId: string;
+    isActive: boolean;
 }
 
 

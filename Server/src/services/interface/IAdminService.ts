@@ -13,4 +13,9 @@ export interface IAdminService {
     unblockUser(userId: string): Promise<void>;
     getAllPatients(filters: UserFilterDTO): Promise<{ patients: PatientListItem[]; total: number; page: number; limit: number; totalPages: number }>;
     getPatientById(patientId: string): Promise<PatientListItem | null>;
+    getDoctorRequests(): Promise<any[]>;
+    getDoctorRequestDetails(doctorId: string, baseUrl: string): Promise<any | null>;
+    approveDoctorRequest(doctorId: string): Promise<void>;
+    rejectDoctorRequest(doctorId: string, rejectionReason: string): Promise<void>;
+    getAllDoctors(filters: any): Promise<any>;
 }

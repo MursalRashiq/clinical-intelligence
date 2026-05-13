@@ -79,6 +79,10 @@ const DoctorSchema = new Schema<IDoctorDocument>(
       type: String,
       default: null,
     },
+    rejectionCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

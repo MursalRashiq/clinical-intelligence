@@ -86,7 +86,7 @@ const SuccessOverlay = () => (
 
 interface OtpBoxProps {
   value:     string;
-  inputRef:  React.RefObject<HTMLInputElement>;
+  inputRef:  React.RefObject<HTMLInputElement | null>;
   onInput:   (val: string) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onPaste:   (e: React.ClipboardEvent<HTMLInputElement>) => void;
@@ -175,7 +175,7 @@ const VerifyOtpPage = () => {
   const [canResend, setCanResend] = useState(false);
 
   // Refs for each input box
-  const inputRefs = Array.from({ length: OTP_LENGTH }, () => useRef<HTMLInputElement>(null));
+  const inputRefs = Array.from({ length: OTP_LENGTH }, () => useRef<HTMLInputElement | null>(null));
 
   // Auto-focus first box on mount
   useEffect(() => { inputRefs[0].current?.focus(); }, []);

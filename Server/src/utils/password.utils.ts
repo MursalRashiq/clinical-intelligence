@@ -16,7 +16,8 @@ export const comparePassword = async (
 };
 
 export const validatePassword = (password: string): void => {
-    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    // Requires at least 8 characters, one uppercase, one lowercase, and one number
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if(!strongPasswordRegex.test(password)) {
         throw new ValidationError(MESSAGES.WEAK_PASSWORD);
     }

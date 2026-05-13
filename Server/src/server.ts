@@ -12,6 +12,8 @@ import passport from 'passport';
 
 import authRouter from './routes/auth.router';
 import adminRouter from './routes/admin.route'
+import doctorRouter from './routes/doctor.route';
+import userRouter from './routes/user.route';
 import { CONFIG } from "./constants/constants";
 import { BASE_ROUTES } from "./constants/routes.constants";
 
@@ -20,7 +22,7 @@ dotenv.config()
 
 const sessionSecret = env.SESSION_SECRET
 if (!sessionSecret) {
-    throw new Error("SESSION_SECRET is required")
+  throw new Error("SESSION_SECRET is required")
 }
 
 connectDB();
@@ -31,11 +33,18 @@ const corsOptions = {
 
     if (!requestOrigin) return callback(null, true);
 
-    const allowedOrigins = [env.CLIENT_URL, env.CLIENT_URL_1, env.CLIENT_URL_2];
+    const allowedOrigins = [
+      env.CLIENT_URL,
+      env.CLIENT_URL_1,
+      env.CLIENT_URL_2,
+      "http://localhost:5173",
+      "http://127.0.0.1:5173"
+    ];
 
-    if (allowedOrigins.includes(requestOrigin)) {
+    if (!requestOrigin || allowedOrigins.includes(requestOrigin)) {
       return callback(null, true);
     } else {
+      console.warn(`[CORS] Origin ${requestOrigin} not allowed`);
       return callback(new Error("Not allowed by CORS"));
     }
   },
@@ -46,36 +55,39 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(morgan('dev'))
 app.use(cookieParser())
-app.use(express.json({ limit: "50mb"}))
-app.use(express.urlencoded({ limit: "50mb", extended: true}))
+app.use(express.json({ limit: "50mb" }))
+app.use(express.urlencoded({ limit: "50mb", extended: true }))
 
 app.use(
-    session({
-        secret: sessionSecret,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: false,
-            httpOnly: true,
-            maxAge: CONFIG.SESSION_MAX_AGE
-        }
-    })
+  session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: CONFIG.SESSION_MAX_AGE
+    }
+  })
 )
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/", (req, res) => {
-    res.json({
-        success: true,
-        message: "Clinical Intelligence API is running...",
-        version: "1.0.0",
-        timestamp: new Date().toISOString(),
-    })
+  res.json({
+    success: true,
+    message: "Clinical Intelligence API is running...",
+    version: "1.0.0",
+    timestamp: new Date().toISOString(),
+  })
 })
 
 app.use(BASE_ROUTES.AUTH, authRouter);
 app.use(BASE_ROUTES.ADMIN, adminRouter);
+app.use(BASE_ROUTES.DOCTORS, doctorRouter);
+app.use(BASE_ROUTES.USERS, userRouter);
+app.use(BASE_ROUTES.PATIENTS, userRouter);
 
 import { errorHandler } from "./middlewares/error.handler.middleware";
 app.use(errorHandler);
@@ -83,7 +95,7 @@ app.use(errorHandler);
 
 const PORT = env.PORT;
 app.listen(PORT, () => {
-    logger.info(`
+  logger.info(`
 =================================
  Server Started
  URL: http://localhost:${PORT}

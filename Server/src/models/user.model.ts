@@ -61,6 +61,30 @@ const UserSchema = new Schema<IUserDocument>(
       type: Boolean,
       default: true,
     },
+    bloodGroup: {
+      type: String,
+      default: null,
+    },
+    address: {
+      type: String,
+      default: null,
+    },
+    city: {
+      type: String,
+      default: null,
+    },
+    state: {
+      type: String,
+      default: null,
+    },
+    country: {
+      type: String,
+      default: null,
+    },
+    pincode: {
+      type: String,
+      default: null,
+    },
     favorite: [
       {
         type: Schema.Types.ObjectId,

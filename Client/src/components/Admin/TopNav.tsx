@@ -5,7 +5,7 @@ import { theme as t } from "../../theme";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutAdmin, selectCurrentAdmin } from "../../redux/admin/adminSlice";
-import adminService from "../../services/adminService";
+import { adminService } from "../../services/AdminService";
 
 interface TopNavProps {
   onMenuClick?: () => void;

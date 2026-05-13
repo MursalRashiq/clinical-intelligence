@@ -7,7 +7,7 @@ export interface IOTPDocument extends Document {
   userData: {
     name: string;
     email: string;
-    phone: string;
+    phone?: string;
     passwordHash: string;
     role: string;
     gender?: "male" | "female" | "other" | null;
@@ -34,7 +34,7 @@ const OTPSchema = new Schema<IOTPDocument>(
     userData: {
       name: { type: String, required: true },
       email: { type: String, required: true },
-      phone: { type: String, required: true },
+      phone: { type: String, required: false },
       passwordHash: { type: String, required: true },
       role: { type: String, required: true, default: "patient" },
       gender: {

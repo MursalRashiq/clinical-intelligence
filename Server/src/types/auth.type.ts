@@ -8,6 +8,8 @@ export interface JWTPayload {
     name?: string;
     profileImage?: string;
     doctorId?: string;
+    verificationStatus?: string;
+    isActive: boolean;
 }
 
 export interface AuthenticatedRequest extends Request {

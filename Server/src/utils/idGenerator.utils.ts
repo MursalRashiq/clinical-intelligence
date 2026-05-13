@@ -4,6 +4,7 @@ import { randomInt } from 'crypto';
 export enum IDPrefix {
     DOCTOR = 'DOC',
     PATIENT = 'PAT',
+    SLOT = 'SLO',   
 }
 
 export class IDGenerator {
@@ -24,5 +25,9 @@ export class IDGenerator {
 
     static generateDoctorID(): string {
         return `${IDPrefix.DOCTOR}-${this._generateSixDigitNumber()}`
+    }
+
+    static generateSlotId(): string {
+        return `${IDPrefix.SLOT}${this._generateSixDigitNumber()}`;
     }
 }

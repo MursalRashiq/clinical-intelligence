@@ -3,12 +3,6 @@ import axios from 'axios';
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 export const AUTH_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
-export const axiosInstance = axios.create({
-    baseURL: API_BASE_URL + "/api",
-    withCredentials: true
-})
-
-
 export const USER_API_ROUTES = {
   LOGIN: "/auth/login",
   REGISTER: "/auth/register",
@@ -34,15 +28,29 @@ export const FRONTEND_ROUTES = {
 
 
   DOCTOR_REGISTER: "/doctor/register",
+  DOCTOR_LOGIN: "/doctor/login",
+  DOCTOR_VERIFY_OTP: "/doctor/verify-otp",
+  DOCTOR_PENDING: "/doctor/pending",
 
-  DASHBOARD: "/dashboard",
+  DOCTOR_DASHBOARD: "/doctor/dashboard",
+  DOCTOR_PROFILE: "/doctor/profile",
+  DOCTOR_SLOTS: "/doctor/slots",
+  DOCTOR_FORGOT_PASSWORD: "/doctor/forgot-password",
+  DOCTOR_FORGOT_PASSWORD_OTP: "/doctor/forgot-password/otp",
+  DOCTOR_FORGOT_PASSWORD_RESET: "/doctor/forgot-password/reset",
   ADMIN_LOGIN: "/admin/login",
   ADMIN_DASHBOARD: "/admin/dashboard",
   ADMIN_PATIENTS: "/admin/patients",
+  ADMIN_DOCTOR_VERIFICATION: "/admin/doctor-verification",
+  ADMIN_DOCTOR_REQUESTS: "/admin/doctor-requests",
+  ADMIN_DOCTOR_REQUEST_DETAILS: (id: string) => `/admin/doctor-requests/${id}`,
   FORGOT_PASSWORD_EMAIL: "admin/forgot/email",
 
+  ADMIN_DOCTORS: "/admin/doctors",
+  ADMIN_DOCTOR_DETAILS: (id: string) => `/admin/doctors/${id}`,
   ERROR_PAGE_404: "/patient/404",
-  ADMIN_PATIENT_DETAILS: (id: string) => `/admin/patients/${id}`
+  ADMIN_PATIENT_DETAILS: (id: string) => `/admin/patients/${id}`,
+  DOCTORS: "/doctors",
 };
 
 export const AUTH_ROUTES = {
@@ -63,8 +71,23 @@ export const DOCTOR_API_ROUTES = {
   RESET_PASSWORD: "/auth/reset-password",
   VERIFICATION: "/doctors/verification",
   SUBMIT_VERIFICATION: "/doctors/submit-verification",
+  GET_PROFILE: "/doctors/profile",
+  RESUBMIT_VERIFICATION: "/doctors/resubmit-verification",
+  UPDATE_DOCUMENTS: "/doctors/documents",
+  GET_DOCUMENT_URL: (index: number) => `/doctors/document-url/${index}`,
   CHANGE_PASSWORD: "/auth/change-password",
-} as const
+  LIST_DOCTORS: "/doctors",
+  SCHEDULE: "/doctors/schedule",
+
+  SCHEDULE_BY_ID: (doctorId: string): string => `/doctors/schedule/${doctorId}`,
+  BLOCK_DATE: (doctorId?: string): string => doctorId ? `/doctors/schedule/${doctorId}/block-date` : "/doctors/schedule/block-date",
+  UNBLOCK_DATE: (doctorId?: string): string => doctorId ? `/doctors/schedule/${doctorId}/block-date` : "/doctors/schedule/block-date",
+  AVAILABLE_SLOTS: (doctorId: string): string => `/doctors/schedule/${doctorId}/available-slots`,
+  RECURRING_SLOTS: "/doctors/schedule/recurring-slots",
+  DELETE_RECURRING_SLOT: (day: string, slotId: string): string => `/doctors/schedule/recurring-slots/${day}/${slotId}`,
+  DELETE_RECURRING_SLOT_BY_TIME: (startTime: string, endTime: string): string => `/doctors/schedule/recurring-slots/by-time/${startTime}/${endTime}`,
+  RELATED_DOCTORS: (doctorId: string): string => `/doctors/${doctorId}/related`,
+} as const;
 
 export const ADMIN_API_ROUTES = {
   LOGIN: "/admin/login",
@@ -74,6 +97,11 @@ export const ADMIN_API_ROUTES = {
   UPDATE_USER: (userId: string) => `/admin/patients/${userId}`,
   BLOCK_USER: (userId: string) => `/admin/patients/${userId}/block`,
   UNBLOCK_USER: (userId: string) => `/admin/patients/${userId}/unblock`,
+  GET_DOCTOR_REQUESTS: "/admin/doctor-requests",
+  GET_DOCTOR_REQUEST_DETAILS: (doctorId: string) => `/admin/doctor-requests/${doctorId}`,
+  APPROVE_DOCTOR: (doctorId: string) => `/admin/doctor-requests/${doctorId}/approve`,
+  REJECT_DOCTOR: (doctorId: string) => `/admin/doctor-requests/${doctorId}/reject`,
+  GET_DOCTORS: "/admin/doctors",
 };
 
 export const HTTP_STATUS = {

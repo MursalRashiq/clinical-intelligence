@@ -38,13 +38,22 @@ export class AuthController implements IAuthController {
 
   private setRefreshTokenCookie(res: Response, token: string) {
     const isProduction = env.NODE_ENV === COOKIE_OPTIONS.ENV_PRODUCTION;
-    res.cookie(COOKIE_OPTIONS.REFRESH_TOKEN, token, {
+    const options = {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? COOKIE_OPTIONS.SAME_SITE_NONE : COOKIE_OPTIONS.SAME_SITE_LAX,
       maxAge: COOKIE_OPTIONS.MAX_AGE,
       path: '/'
+    };
+    
+    this.logger.info("Setting refresh token cookie", { 
+      name: COOKIE_OPTIONS.REFRESH_TOKEN,
+      secure: options.secure,
+      sameSite: options.sameSite,
+      maxAge: options.maxAge
     });
+
+    res.cookie(COOKIE_OPTIONS.REFRESH_TOKEN, token, options);
   }
 
   register = async (req: Request, res: Response, next: NextFunction) => {
@@ -97,30 +106,50 @@ export class AuthController implements IAuthController {
     const dto: LoginDTO & { role?: string } = req.body;
     const role = this.parseRole(dto.role);
 
+    this.logger.info(`Login request received for: ${dto.email}, role: ${role}`);
+
     const result = await this._authService.login({
       email: dto.email,
       password: dto.password,
       role,
     });
 
+    this.logger.info(`Login successful for ${dto.email}, preparing response`);
+
     const { refreshToken, ...response } = result;
 
     if (refreshToken) {
       this.setRefreshTokenCookie(res, refreshToken);
+    } else {
+      this.logger.warn(`No refresh token returned from authService for ${dto.email}`);
     }
 
     sendSuccess(res, response, MESSAGES.LOGIN_SUCCESS, HttpStatus.OK);
-  } catch (err: unknown) {
+  } catch (err: any) {
+    this.logger.error("Login error details:", {
+      message: err.message,
+      status: err.statusCode,
+      stack: err.stack
+    });
     next(err);
   }
 };
 
   refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      this.logger.info("Refresh token request received", {
+        hasCookies: !!req.cookies,
+        cookieNames: req.cookies ? Object.keys(req.cookies) : [],
+        rawCookieHeader: req.headers.cookie,
+        userAgent: req.headers['user-agent']
+      });
+
       const token = req.cookies?.[COOKIE_OPTIONS.REFRESH_TOKEN];
 
       if (!token) {
-        this.logger.warn("Refresh token attempt without cookie");
+        this.logger.warn("Refresh token attempt without cookie", {
+          cookiesReceived: req.cookies
+        });
         throw new AppError(MESSAGES.REFRESH_TOKEN_MISSING, HttpStatus.UNAUTHORIZED);
       }
 

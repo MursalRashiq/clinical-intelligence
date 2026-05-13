@@ -32,7 +32,10 @@ export class AdminController implements IAdminController {
             const result = await this._adminService.loginAdmin(dto);
 
             if (result.refreshToken) {
+                console.log("[AdminController] Setting refresh token cookie");
                 this.setRefreshTokenCookie(res, result.refreshToken);
+            } else {
+                console.warn("[AdminController] No refresh token returned from service");
             }
 
             sendSuccess(res, { 
@@ -84,6 +87,57 @@ export class AdminController implements IAdminController {
             const userId = req.params.patientId as string;
             await this._adminService.unblockUser(userId);
             sendSuccess(res, undefined, MESSAGES.PATIENT_UNBLOCKED_SUCCESS);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getDoctorRequests = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const result = await this._adminService.getDoctorRequests();
+            sendSuccess(res, result, "Doctor requests fetched successfully");
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getDoctorRequestDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const doctorId = req.params.doctorId as string;
+            const baseUrl = `${req.protocol}://${req.get("host")}`;
+            const result = await this._adminService.getDoctorRequestDetails(doctorId, baseUrl);
+            sendSuccess(res, result, "Doctor request details fetched successfully");
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    approveDoctorRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const doctorId = req.params.doctorId as string;
+            await this._adminService.approveDoctorRequest(doctorId);
+            sendSuccess(res, undefined, "Doctor request approved successfully");
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    rejectDoctorRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const doctorId = req.params.doctorId as string;
+            const { rejectionReason } = req.body;
+            await this._adminService.rejectDoctorRequest(doctorId, rejectionReason);
+            sendSuccess(res, undefined, "Doctor request rejected successfully");
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getAllDoctors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const filters = req.query as any;
+            const result = await this._adminService.getAllDoctors(filters);
+            sendSuccess(res, result, "Doctors fetched successfully");
         } catch (error) {
             next(error);
         }

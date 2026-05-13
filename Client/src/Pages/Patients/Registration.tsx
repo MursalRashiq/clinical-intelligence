@@ -27,11 +27,6 @@ const codes = [
     { f: "🇨🇦", c: "+1" },
 ];
 
-const getMaxDate = () => {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() - 1);
-    return d.toISOString().split("T")[0];
-};
 
 export default function PatientRegistration() {
     const navigate = useNavigate();

@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { theme } from "../theme";
 import HeartbeatIcon from "./HeartbeatIcon";
-import { logout, selectCurrentUser } from "../redux/user/userSlice";
+import { selectCurrentUser } from "../redux/user/userSlice";
 import { FRONTEND_ROUTES } from "../utils/constants";
-import AuthService from "../services/AuthService";
-
 interface NavbarProps {
   /** Highlight a nav link as active by label e.g. "Home" */
   activePage?: string;
@@ -15,7 +12,7 @@ interface NavbarProps {
 
 const navLinks = [
   { label: "Home",    href: FRONTEND_ROUTES.HOME   },
-  { label: "Doctors", href: "#" },
+  { label: "Doctors", href: FRONTEND_ROUTES.DOCTORS },
   { label: "About",   href: "#"             },
   { label: "Contact", href: "#"             },
 ];
@@ -23,15 +20,6 @@ const navLinks = [
 const Navbar = ({ activePage }: NavbarProps) => {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const currentUser = useSelector(selectCurrentUser);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await AuthService.logout();
-    dispatch(logout());
-    toast.success("Logged out successfully");
-    navigate(FRONTEND_ROUTES.LOGIN);
-  };
 
   return (
     <nav
@@ -117,15 +105,45 @@ const Navbar = ({ activePage }: NavbarProps) => {
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: theme.text }}>{currentUser.name}</p>
                   <p style={{ margin: 0, fontSize: 10, color: theme.teal, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>Patient</p>
                </div>
-               <div
-                  style={{
-                      width: 40, height: 40, borderRadius: 12, border: "none",
-                      background: theme.blueLight, color: theme.blue,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                  }}
-               >
-                  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-               </div>
+               {currentUser.profileImage && currentUser.profileImage.trim() !== "" ? (
+                  <img
+                    src={currentUser.profileImage}
+                    alt={currentUser.name}
+                    style={{
+                      width: 40, height: 40, borderRadius: 12,
+                      objectFit: "cover",
+                      border: `2px solid ${theme.blueLight}`,
+                      boxShadow: "0 2px 8px rgba(21,96,232,.18)",
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent) {
+                        const fallback = document.createElement("div");
+                        fallback.style.width = "40px";
+                        fallback.style.height = "40px";
+                        fallback.style.borderRadius = "12px";
+                        fallback.style.background = theme.blueLight;
+                        fallback.style.color = theme.blue;
+                        fallback.style.display = "flex";
+                        fallback.style.alignItems = "center";
+                        fallback.style.justifyContent = "center";
+                        fallback.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+               ) : (
+                  <div
+                     style={{
+                         width: 40, height: 40, borderRadius: 12, border: "none",
+                         background: theme.blueLight, color: theme.blue,
+                         display: "flex", alignItems: "center", justifyContent: "center",
+                     }}
+                  >
+                     <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+               )}
             </Link>
           </div>
         ) : (

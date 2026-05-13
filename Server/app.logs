@@ -33,3 +33,162 @@
 [2026-04-29T18:22:24.340Z] [DEBUG] [OTPService] OTP generated {"email":"fidhafathima12@gmail.com"}
 [2026-04-29T18:26:12.298Z] [DEBUG] [OTPService] OTP generated {"email":"fidhafathima21@gmail.com"}
 [2026-04-29T19:52:10.799Z] [DEBUG] [OTPService] OTP generated {"email":"fathima@gmail.com"}
+[2026-04-30T11:46:34.299Z] [DEBUG] [OTPService] OTP generated {"email":"albin6@yopmail.com"}
+[2026-04-30T11:48:17.272Z] [DEBUG] [OTPService] OTP generated {"email":"albin6@yopmail.com"}
+[2026-04-30T11:52:58.081Z] [DEBUG] [OTPService] OTP generated {"email":"albin6@yopmail.com"}
+[2026-04-30T11:55:36.957Z] [DEBUG] [OTPService] OTP generated {"email":"mursalrashik007@gmail.com"}
+[2026-05-07T16:22:48.222Z] [DEBUG] [OTPService] OTP generated {"email":"mursalshah@gmail.com"}
+[2026-05-07T16:26:58.862Z] [DEBUG] [OTPService] OTP generated {"email":"mursal@gmail.com"}
+[2026-05-07T17:39:45.373Z] [DEBUG] [OTPService] OTP generated {"email":"mursalmbbs@gmail.com"}
+[2026-05-08T11:59:48.480Z] [DEBUG] [OTPService] OTP generated {"email":"yasinmbbs@gmail.com"}
+[2026-05-08T15:06:35.683Z] [DEBUG] [OTPService] OTP generated {"email":"yasinmbbss@gmail.com"}
+[2026-05-10T10:18:07.458Z] [DEBUG] [OTPService] OTP generated {"email":"fidhambbs@gmail.com"}
+[2026-05-12T15:02:46.367Z] [DEBUG] [OTPService] OTP generated {"email":"althafmbbs@gmail.com"}
+[2026-05-12T20:49:37.366Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:49:37.554Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:49:49.310Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:49:49.636Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:52:18.493Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:52:18.671Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:53:30.325Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:53:30.500Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:55:37.081Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:55:37.306Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:55:42.188Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:56:25.071Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:56:28.324Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:56:30.781Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:57:01.816Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:57:32.719Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:57:45.754Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:57:58.813Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:05.542Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:07.387Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:09.074Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:12.646Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:14.360Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:16.011Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:19.122Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:20.676Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:22.425Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:50.052Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:58:50.261Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T20:59:47.335Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:00:11.521Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:00:26.783Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:00:29.224Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:00:31.862Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:02:56.709Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:03:10.521Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:03:23.479Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:03:38.449Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:06:51.039Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:06:53.010Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:06:54.721Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:06:56.995Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:06:58.784Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:07:00.659Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:07:02.431Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:07:04.654Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:07:06.263Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:08:15.831Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:14:33.720Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:14:33.898Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:14:36.256Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:14:37.877Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:14:40.115Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:14:55.881Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:22:19.875Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0002-05-13"}
+[2026-05-12T21:22:20.550Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0020-05-13"}
+[2026-05-12T21:22:21.286Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0202-05-13"}
+[2026-05-12T21:22:21.997Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:22:34.207Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0002-05-15"}
+[2026-05-12T21:22:34.910Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0020-05-15"}
+[2026-05-12T21:22:35.206Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0200-05-15"}
+[2026-05-12T21:22:37.214Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2006-05-15"}
+[2026-05-12T21:23:22.558Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2006-05-01"}
+[2026-05-12T21:23:23.660Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2006-05-10"}
+[2026-05-12T21:23:29.695Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2006-05-15"}
+[2026-05-12T21:23:31.003Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0002-05-15"}
+[2026-05-12T21:23:31.352Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0020-05-15"}
+[2026-05-12T21:23:31.537Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0200-05-15"}
+[2026-05-12T21:23:33.917Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0002-05-15"}
+[2026-05-12T21:23:34.546Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0020-05-15"}
+[2026-05-12T21:23:34.787Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0202-05-15"}
+[2026-05-12T21:23:35.405Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-15"}
+[2026-05-12T21:29:03.453Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:29:03.580Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:29:19.514Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0002-05-15"}
+[2026-05-12T21:29:19.819Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0020-05-15"}
+[2026-05-12T21:29:20.067Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"0202-05-15"}
+[2026-05-12T21:29:21.823Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-15"}
+[2026-05-12T21:31:42.145Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:32:04.023Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:32:04.143Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:34:12.394Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:35:00.505Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:35:00.650Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:35:19.824Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:35:20.027Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:35:38.374Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:35:38.508Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:37:40.683Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:37:42.405Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:37:44.114Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:38:15.336Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:38:51.849Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:38:51.989Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:40:09.904Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:40:10.032Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:40:15.197Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:40:15.355Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:40:46.702Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:40:46.851Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-12"}
+[2026-05-12T21:42:46.763Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:42:46.883Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:42:50.425Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:42:50.548Z] [DEBUG] [DoctorService] Fetching schedule by doctor ID {"doctorId":"6a005c47c0279ccc27c97e3b"}
+[2026-05-12T21:44:03.477Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:44:03.611Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:46:06.022Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:46:06.192Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:46:30.123Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:46:30.302Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:46:57.616Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:46:57.770Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:47:03.867Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:47:04.095Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:48:31.490Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:48:31.693Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:48:47.083Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:48:54.219Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:48:54.399Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:07.664Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:07.804Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:08.977Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:09.131Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:10.319Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:10.448Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:13.460Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:13.656Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:13.821Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:13.990Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:14.159Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:14.275Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:14.397Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:14.539Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:29.135Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:49:29.286Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T21:54:16.876Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T21:54:18.036Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-12T22:08:05.205Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-12T22:08:05.333Z] [DEBUG] [DoctorService] Getting available slots {"doctorId":"6a005c47c0279ccc27c97e3b","date":"2026-05-13"}
+[2026-05-13T05:16:54.988Z] [DEBUG] [OTPService] OTP generated {"email":"jasirshabeeb850@gmail.com"}
+[2026-05-13T05:28:49.862Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-13T05:28:50.084Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-13T05:32:54.446Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-13T05:32:54.691Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-13T06:17:53.105Z] [DEBUG] [OTPService] OTP generated {"email":"mursalrashik007@gmail.com"}
+[2026-05-13T06:20:52.223Z] [DEBUG] [OTPService] OTP generated {"email":"mursalrashik007@gmail.com"}
+[2026-05-13T06:57:10.164Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}
+[2026-05-13T06:57:10.391Z] [DEBUG] [DoctorService] Fetching schedule by user ID {"userId":"6a005c47c0279ccc27c97e3a"}

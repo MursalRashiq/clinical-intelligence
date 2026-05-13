@@ -7,6 +7,7 @@ export interface AuthUser {
     phone?: string;
     role: string;
     profileImage?: string;
+    isActive?: boolean;
 }
 
 export interface LoginRequest {

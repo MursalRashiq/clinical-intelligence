@@ -24,7 +24,7 @@ export interface UserListItem {
     id: string;
     name: string;
     email: string;
-    phone?: string;
+    phone?: string | null;
     role: "patient" | "doctor" | "admin";
     profileImage?: string | null;
     isActive: boolean;

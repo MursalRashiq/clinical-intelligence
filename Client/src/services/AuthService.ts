@@ -24,6 +24,7 @@ interface JwtPayload {
     name?: string;
     profileImage?: string;
     doctorId?: string;
+    isActive: boolean;
 }
 
 class AuthService {
@@ -173,6 +174,42 @@ class AuthService {
     }
   }
 
+  async getDoctorProfile() {
+    try {
+      const response = await axiosInstance.get(DOCTOR_API_ROUTES.GET_PROFILE);
+      return response.data;
+    } catch (error: unknown) {
+      return handleApiError(error, "Failed to fetch doctor profile");
+    }
+  }
+
+  async resubmitVerification() {
+    try {
+      const response = await axiosInstance.post(DOCTOR_API_ROUTES.RESUBMIT_VERIFICATION);
+      return response.data;
+    } catch (error: unknown) {
+      return handleApiError(error, "Failed to resubmit verification");
+    }
+  }
+
+  async updateDoctorDocuments(formData: FormData) {
+    try {
+      const response = await axiosInstance.put(DOCTOR_API_ROUTES.UPDATE_DOCUMENTS, formData);
+      return response.data;
+    } catch (error: unknown) {
+      return handleApiError(error, "Failed to update documents");
+    }
+  }
+
+  async getDocumentUrl(index: number) {
+    try {
+      const response = await axiosInstance.get(DOCTOR_API_ROUTES.GET_DOCUMENT_URL(index));
+      return response.data;
+    } catch (error: unknown) {
+      return handleApiError(error, "Failed to fetch document URL");
+    }
+  }
+
    async adminLogin(credentials: LoginRequest) {
     try {
       const response = await axiosInstance.post(
@@ -212,6 +249,7 @@ class AuthService {
       email: userInfo.email,
       role: userInfo.role,
       name: userInfo.name || '',
+      isActive: userInfo.isActive,
     } as unknown as AuthUser;
   }
 

@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Loader2 } from "lucide-react";
 import AuthService from "../../services/AuthService";
@@ -232,11 +232,19 @@ function Toast({ message, visible, isError }: { message: string; visible: boolea
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function ClinicalIntelligenceLogin() {
     const [toast, setToast] = useState({ visible: false, message: "", isError: false });
+    const location = useLocation();
 
     const showToast = useCallback((msg: string, isError = false) => {
         setToast({ visible: true, message: msg, isError });
         setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
     }, []);
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get("error") === "blocked") {
+            showToast("Your account has been blocked. Please contact support.", true);
+        }
+    }, [location.search, showToast]);
 
     return (
         <>

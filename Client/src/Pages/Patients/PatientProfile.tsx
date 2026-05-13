@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { selectCurrentUser, logout } from "../../redux/user/userSlice";
+import { selectCurrentUser, logout, updateUser } from "../../redux/user/userSlice";
+import Cropper from 'react-easy-crop';
+import getCroppedImg from "../../utils/cropImage";
 import AuthService from "../../services/AuthService";
+import PatientService from "../../services/PatientService";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -33,12 +36,6 @@ interface ProfileData {
   pincode: string;
 }
 
-// ─── Icons ─────────────────────────────────────────────────────────────────────
-const Icon = ({ path, w = 16, h = 16, stroke = "currentColor", sw = 2 }: { path: string | string[]; w?: number; h?: number; stroke?: string; sw?: number }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" width={w} height={h}>
-    {Array.isArray(path) ? path.map((d, i) => <path key={i} d={d} />) : <path d={path} />}
-  </svg>
-);
 
 // ─── Sidebar Nav Item ──────────────────────────────────────────────────────────
 function NavLink({ item }: { item: NavItem }) {
@@ -71,8 +68,8 @@ function NavLink({ item }: { item: NavItem }) {
         background: isActive
           ? "linear-gradient(135deg, var(--blue), var(--blue2))"
           : hovered
-          ? "var(--blue-xlight)"
-          : "transparent",
+            ? "var(--blue-xlight)"
+            : "transparent",
         transition: "all 0.18s",
         boxShadow: isActive ? "0 4px 14px rgba(21,96,232,.28)" : "none",
         position: "relative",
@@ -202,11 +199,11 @@ function SectionHeader({ icon, title, lastUpdated, onEdit, onDelete }: {
             onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
             onMouseLeave={e => (e.currentTarget.style.color = "var(--sub)")}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+            {/* <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
               <polyline points="3 6 5 6 21 6" />
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
               <path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-            </svg>
+            </svg> */}
           </button>
         )}
       </div>
@@ -227,15 +224,35 @@ export default function ProfilePage() {
     navigate(FRONTEND_ROUTES.LOGIN);
   };
 
+  // If the server reports the account is blocked (403), log out immediately
+  useEffect(() => {
+    const handleBlocked = async () => {
+      dispatch(logout());
+      navigate(`${FRONTEND_ROUTES.LOGIN}?error=blocked`, { replace: true });
+    };
+    window.addEventListener("user:blocked", handleBlocked);
+    return () => window.removeEventListener("user:blocked", handleBlocked);
+  }, [dispatch, navigate]);
+
   const [avatar, setAvatar] = useState<string | null>(null);
   const [editingPersonal, setEditingPersonal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [referCopied, setReferCopied] = useState(false);
+
+  // Image upload & crop states
+  const [toast, setToast] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedImg, setSelectedImg] = useState<File | null>(null);
+  const [cropModal, setCropModal] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   const [profile, setProfile] = useState<ProfileData>({
     name: currentUser?.name || "",
-    patientId: currentUser?.id ? `PT${currentUser.id.substring(0,6).toUpperCase()}` : "PT000000",
+    patientId: currentUser?.id ? `PT${currentUser.id.substring(0, 6).toUpperCase()}` : "PT000000",
     gender: "",
     age: "",
     phone: "",
@@ -252,30 +269,91 @@ export default function ProfilePage() {
   const [draft, setDraft] = useState<ProfileData>(profile);
 
   useEffect(() => {
-    if (currentUser) {
-      const updateData = (prev: ProfileData) => ({
-        ...prev,
-        name: currentUser.name || prev.name,
-        email: currentUser.email || prev.email,
-        patientId: currentUser.id ? `PT${currentUser.id.substring(0,6).toUpperCase()}` : prev.patientId
-      });
-      setProfile(updateData);
-      setDraft(updateData);
+    const fetchProfile = async () => {
+      try {
+        const res = await PatientService.getProfile();
+        if (res.success) {
+          const data = res.data;
+          const mappedData = {
+            name: data.name || "",
+            patientId: data.customId || "PT000000",
+            gender: data.gender || "",
+            age: data.dob ? calculateAge(data.dob) : "",
+            phone: data.phone || "",
+            email: data.email || "",
+            dob: data.dob ? new Date(data.dob).toISOString().split('T')[0] : "",
+            bloodGroup: data.bloodGroup || "",
+            address: data.address || "",
+            city: data.city || "",
+            state: data.state || "",
+            country: data.country || "",
+            pincode: data.pincode || "",
+          };
+          setProfile(mappedData);
+          setDraft(mappedData);
+          if (data.profileImage) {
+            setAvatar(data.profileImage);
+            dispatch(updateUser({ profileImage: data.profileImage }));
+          }
+        }
+      } catch (error: any) {
+        // 403 = account has been blocked by admin
+        if (error?.response?.status === 403) {
+          await AuthService.logout();
+          dispatch(logout());
+          navigate(`${FRONTEND_ROUTES.LOGIN}?error=blocked`, { replace: true });
+          return;
+        }
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [currentUser?.id]);
+
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
     }
-  }, [currentUser]);
+    return age.toString();
+  };
 
   const handleFieldChange = (name: string, value: string) => {
     setDraft((prev) => ({ ...prev, [name]: value }));
   };
 
-  const savePersonal = () => {
-    setProfile(draft);
-    setEditingPersonal(false);
+  const savePersonal = async () => {
+    try {
+      const res = await PatientService.updateProfile(draft);
+      if (res.success) {
+        setProfile(draft);
+        setEditingPersonal(false);
+      }
+    } catch (error: any) {
+      if (error?.response?.status === 403) {
+        await AuthService.logout();
+        dispatch(logout());
+        navigate(`${FRONTEND_ROUTES.LOGIN}?error=blocked`, { replace: true });
+        return;
+      }
+      console.error("Error updating personal info:", error);
+    }
   };
 
-  const saveAddress = () => {
-    setProfile(draft);
-    setEditingAddress(false);
+  const saveAddress = async () => {
+    try {
+      const res = await PatientService.updateProfile(draft);
+      if (res.success) {
+        setProfile(draft);
+        setEditingAddress(false);
+      }
+    } catch (error) {
+      console.error("Error updating address:", error);
+    }
   };
 
   const cancelEdit = () => {
@@ -284,11 +362,79 @@ export default function ProfilePage() {
     setEditingAddress(false);
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
+
+  /** Validates image-only, then opens the crop modal */
+  const onImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatar(url);
+    if (!file.type.startsWith("image/")) {
+      showToast("Only image files are allowed (JPG, PNG, GIF, WebP, etc.)");
+      e.target.value = "";
+      return;
+    }
+    const maxMB = 5;
+    if (file.size > maxMB * 1024 * 1024) {
+      showToast(`Image must be smaller than ${maxMB} MB.`);
+      e.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setCropModal(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const onCropComplete = (_: any, pixels: any) => { setCroppedAreaPixels(pixels); };
+
+  const handleAvatarUpload = async (file: File) => {
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", profile.name);
+      formData.append("profileImage", file);
+      const res = await PatientService.updateProfile(formData);
+      if (res?.success) {
+        const newImgUrl = res.data?.profileImage;
+        setAvatar(newImgUrl || null);
+        setPreviewUrl(null);
+        setSelectedImg(null);
+        showToast("Profile picture updated!");
+        dispatch(updateUser({ profileImage: newImgUrl }));
+      } else {
+        showToast(res?.message || "Upload failed.");
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        await AuthService.logout();
+        dispatch(logout());
+        navigate(`${FRONTEND_ROUTES.LOGIN}?error=blocked`, { replace: true });
+        return;
+      }
+      showToast("Upload failed. Please try again.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleSaveCrop = async () => {
+    if (!imageToCrop || !croppedAreaPixels) return;
+    try {
+      const blob = await getCroppedImg(imageToCrop, croppedAreaPixels);
+      if (blob) {
+        const croppedFile = new File([blob], "profile-picture.jpg", { type: "image/jpeg" });
+        setSelectedImg(croppedFile);
+        setPreviewUrl(URL.createObjectURL(blob));
+        setCropModal(false);
+        await handleAvatarUpload(croppedFile);
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Cropping failed. Please try again.");
+    }
   };
 
   const handleRefer = () => {
@@ -335,6 +481,7 @@ export default function ProfilePage() {
           0%   { background-position: -400px 0; }
           100% { background-position: 400px 0; }
         }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .card {
           background: white;
@@ -445,50 +592,54 @@ export default function ProfilePage() {
             {/* Avatar */}
             <div style={{ padding: "0 20px 20px", marginTop: -36 }}>
               <div style={{ position: "relative", display: "inline-block", marginBottom: 12 }}>
-                <div
-                  className="avatar-wrap"
-                  onClick={() => fileRef.current?.click()}
-                  style={{
-                    width: 72, height: 72, borderRadius: "50%",
-                    border: "3px solid white",
-                    background: "var(--blue-light)",
-                    overflow: "hidden", cursor: "pointer",
-                    boxShadow: "0 4px 16px rgba(21,96,232,.2)",
-                    animation: "pulse-ring 3s ease-in-out infinite",
-                    position: "relative",
-                  }}
-                >
-                  {avatar
-                    ? <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : (
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth={1.5} width={30} height={30}>
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
-                        </svg>
-                      </div>
-                    )
+                {/* Avatar circle */}
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  border: "3px solid white",
+                  background: "var(--blue-light)",
+                  overflow: "hidden",
+                  boxShadow: "0 4px 16px rgba(21,96,232,.2)",
+                  animation: "pulse-ring 3s ease-in-out infinite",
+                  position: "relative",
+                  filter: avatarUploading ? "brightness(0.6)" : "none",
+                  transition: "filter .2s",
+                }}>
+                  {(previewUrl || avatar)
+                    ? <img src={previewUrl || avatar!} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth={1.5} width={30} height={30}>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+                      </svg>
+                    </div>
                   }
-                  {/* Hover overlay */}
-                  <div className="avatar-overlay" style={{
-                    position: "absolute", inset: 0,
-                    background: "rgba(21,96,232,.55)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    opacity: 0, transition: "opacity .2s",
-                  }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} width={18} height={18}>
+                  {avatarUploading && (
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 20, height: 20, border: "3px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    </div>
+                  )}
+                </div>
+                {/* Camera button */}
+                {!avatarUploading && (
+                  <button
+                    onClick={() => fileRef.current?.click()}
+                    title="Change profile picture (images only)"
+                    style={{
+                      position: "absolute", bottom: 0, right: -2,
+                      width: 22, height: 22, borderRadius: "50%",
+                      background: "linear-gradient(135deg,var(--blue2),var(--blue))",
+                      border: "2px solid white", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 2px 8px rgba(21,96,232,.4)",
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} width={11} height={11}>
                       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                       <circle cx="12" cy="13" r="4" />
                     </svg>
-                  </div>
-                </div>
-                {/* Online dot */}
-                <div style={{
-                  position: "absolute", bottom: 3, right: 3,
-                  width: 14, height: 14, borderRadius: "50%",
-                  background: "var(--green)", border: "2.5px solid white",
-                }} />
+                  </button>
+                )}
               </div>
-              <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: "none" }} />
+              <input ref={fileRef} id="patientProfileUpload" type="file" accept="image/*" onChange={onImageChange} style={{ display: "none" }} />
 
               <div style={{ fontFamily: "'Fraunces',serif", fontSize: 17, fontWeight: 700, color: "var(--text)", marginBottom: 3 }}>
                 {profile.name}
@@ -554,43 +705,73 @@ export default function ProfilePage() {
             />
 
             {/* Photo row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px", color: "var(--sub)", marginBottom: 10 }}>
-                  Profile Photo
+            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 28 }}>
+              {/* Avatar preview */}
+              <div style={{ position: "relative", display: "inline-block", flexShrink: 0 }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  border: "2.5px solid var(--border)",
+                  background: "var(--bg)", overflow: "hidden",
+                  filter: avatarUploading ? "brightness(0.6)" : "none",
+                  transition: "filter .2s",
+                  position: "relative",
+                }}>
+                  {(previewUrl || avatar)
+                    ? <img src={previewUrl || avatar!} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="var(--sub)" strokeWidth={1.5} width={28} height={28}>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+                      </svg>
+                    </div>
+                  }
+                  {avatarUploading && (
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 20, height: 20, border: "3px solid var(--blue)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    </div>
+                  )}
                 </div>
-                <div style={{ position: "relative", display: "inline-block" }}>
-                  <div
+                {!avatarUploading && (
+                  <button
                     onClick={() => fileRef.current?.click()}
+                    title="Upload profile picture — images only (JPG, PNG, WebP, max 5 MB)"
                     style={{
-                      width: 68, height: 68, borderRadius: "50%",
-                      border: "2px solid var(--border)",
-                      background: "var(--bg)", overflow: "hidden",
-                      cursor: "pointer", transition: "border-color .2s",
+                      position: "absolute", bottom: 0, right: 0,
+                      width: 22, height: 22, borderRadius: "50%",
+                      background: "linear-gradient(135deg,var(--blue2),var(--blue))",
+                      border: "2px solid white", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 2px 8px rgba(21,96,232,.4)",
                     }}
                   >
-                    {avatar
-                      ? <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sub)" strokeWidth={1.5} width={28} height={28}>
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
-                          </svg>
-                        </div>
-                    }
-                  </div>
-                  <div style={{
-                    position: "absolute", bottom: 1, right: 1,
-                    width: 18, height: 18, borderRadius: "50%",
-                    background: "var(--green)", border: "2px solid white",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3} width={9} height={9}>
-                      <polyline points="20 6 9 17 4 12" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} width={11} height={11}>
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
                     </svg>
-                  </div>
-                </div>
+                  </button>
+                )}
               </div>
-
+              {/* Upload hints */}
+              <div>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={avatarUploading}
+                  style={{
+                    padding: "8px 16px", borderRadius: 9, cursor: avatarUploading ? "not-allowed" : "pointer",
+                    border: "1.5px solid var(--blue)", background: "var(--blue-xlight)",
+                    color: "var(--blue)", fontSize: 13, fontWeight: 700,
+                    display: "flex", alignItems: "center", gap: 6,
+                    marginBottom: 6, transition: "all .2s",
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={13} height={13}>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                  </svg>
+                  {avatarUploading ? "Uploading…" : "Upload Photo"}
+                </button>
+                <p style={{ fontSize: 11, color: "var(--sub)", margin: 0 }}>
+                  JPG, PNG, WebP, GIF · Max 5 MB · Images only
+                </p>
+              </div>
             </div>
 
             {/* Refer & Delete row */}
@@ -621,31 +802,7 @@ export default function ProfilePage() {
                 </svg>
                 {referCopied ? "Link Copied!" : "Refer Friends"}
               </button>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                style={{
-                  flex: 1, minWidth: 180,
-                  padding: "13px 20px",
-                  borderRadius: 11,
-                  border: "1.5px solid #fecaca",
-                  background: "#fff5f5",
-                  color: "#ef4444",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
-                  fontSize: 14, fontWeight: 700,
-                  cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  transition: "all .2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#fff5f5"; }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={15} height={15}>
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                  <path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                </svg>
-                Delete Account
-              </button>
+
             </div>
 
             {/* Information heading */}
@@ -656,12 +813,12 @@ export default function ProfilePage() {
 
             {/* Fields grid */}
             <div className="fields-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
-              <InfoField label="Full Name" value={profile.name} editing={false} name="name" onChange={()=>{}} colSpan={2} />
-              <InfoField label="Date of Birth" value={profile.dob} editing={false} name="dob" onChange={()=>{}} type="date" />
-              <InfoField label="Gender" value={profile.gender} editing={false} name="gender" onChange={()=>{}} />
-              <InfoField label="Phone Number" value={profile.phone} editing={false} name="phone" onChange={()=>{}} type="tel" />
-              <InfoField label="Email Address" value={profile.email} editing={false} name="email" onChange={()=>{}} type="email" />
-              <InfoField label="Blood Group" value={profile.bloodGroup} editing={false} name="bloodGroup" onChange={()=>{}} />
+              <InfoField label="Full Name" value={profile.name} editing={false} name="name" onChange={() => { }} colSpan={2} />
+              <InfoField label="Date of Birth" value={profile.dob} editing={false} name="dob" onChange={() => { }} type="date" />
+              <InfoField label="Gender" value={profile.gender} editing={false} name="gender" onChange={() => { }} />
+              <InfoField label="Phone Number" value={profile.phone} editing={false} name="phone" onChange={() => { }} type="tel" />
+              <InfoField label="Email Address" value={profile.email} editing={false} name="email" onChange={() => { }} type="email" />
+              <InfoField label="Blood Group" value={profile.bloodGroup} editing={false} name="bloodGroup" onChange={() => { }} />
             </div>
           </div>
 
@@ -676,16 +833,16 @@ export default function ProfilePage() {
             {/* Add new address */}
             {!profile.address && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-                <button 
+                <button
                   onClick={() => { setDraft(profile); setEditingAddress(true); }}
                   style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "8px 16px", borderRadius: 8,
-                  border: "1.5px dashed rgba(21,96,232,.3)",
-                  background: "var(--blue-xlight)", color: "var(--blue)",
-                  fontSize: 12, fontWeight: 700, cursor: "pointer",
-                  transition: "all .2s",
-                }}>
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "8px 16px", borderRadius: 8,
+                    border: "1.5px dashed rgba(21,96,232,.3)",
+                    background: "var(--blue-xlight)", color: "var(--blue)",
+                    fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    transition: "all .2s",
+                  }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={13} height={13}>
                     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
@@ -696,12 +853,12 @@ export default function ProfilePage() {
 
             {/* Address fields */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <InfoField label="Address" value={profile.address} editing={false} name="address" onChange={()=>{}} colSpan={1} />
+              <InfoField label="Address" value={profile.address} editing={false} name="address" onChange={() => { }} colSpan={1} />
               <div className="fields-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
-                <InfoField label="City" value={profile.city} editing={false} name="city" onChange={()=>{}} />
-                <InfoField label="State" value={profile.state} editing={false} name="state" onChange={()=>{}} />
-                <InfoField label="Country" value={profile.country} editing={false} name="country" onChange={()=>{}} />
-                <InfoField label="Pincode" value={profile.pincode} editing={false} name="pincode" onChange={()=>{}} />
+                <InfoField label="City" value={profile.city} editing={false} name="city" onChange={() => { }} />
+                <InfoField label="State" value={profile.state} editing={false} name="state" onChange={() => { }} />
+                <InfoField label="Country" value={profile.country} editing={false} name="country" onChange={() => { }} />
+                <InfoField label="Pincode" value={profile.pincode} editing={false} name="pincode" onChange={() => { }} />
               </div>
             </div>
           </div>
@@ -785,53 +942,89 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ── Delete Modal ── */}
-      {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div style={{
-              width: 60, height: 60, borderRadius: "50%",
-              background: "#fff0f0", border: "2px solid #fecaca",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 18px",
-            }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth={2} width={24} height={24}>
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
+
+      {/* ── Crop Modal ── */}
+      {cropModal && imageToCrop && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,28,46,.8)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300, padding: 20 }}>
+          <div style={{ background: "white", borderRadius: 24, width: "100%", maxWidth: 500, overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0,0,0,.5)" }}>
+            {/* Header */}
+            <div style={{ padding: "22px 28px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text)", margin: 0, fontFamily: "'Fraunces',serif" }}>Crop Profile Picture</h3>
+              <button onClick={() => setCropModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--sub)", fontSize: 20, lineHeight: 1 }}>✕</button>
             </div>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 700, color: "var(--text)", marginBottom: 10 }}>
-              Delete Account?
+            {/* Crop area */}
+            <div style={{ position: "relative", width: "100%", height: 380, background: "#000" }}>
+              <Cropper
+                image={imageToCrop}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+                cropShape="round"
+                showGrid={false}
+              />
             </div>
-            <p style={{ fontSize: 14, color: "var(--sub)", lineHeight: 1.65, marginBottom: 24 }}>
-              This action is permanent and cannot be undone. All your data, appointments, and records will be deleted.
-            </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                style={{
-                  flex: 1, padding: "12px", borderRadius: 11,
-                  border: "1.5px solid var(--border)", background: "white",
-                  color: "var(--sub)", fontSize: 14, fontWeight: 600, cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                style={{
-                  flex: 1, padding: "12px", borderRadius: 11, border: "none",
-                  background: "#ef4444", color: "white",
-                  fontSize: 14, fontWeight: 700, cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(239,68,68,.3)",
-                }}
-              >
-                Delete
-              </button>
+            {/* Controls */}
+            <div style={{ padding: 28 }}>
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--sub)" }}>Zoom</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)" }}>{Math.round(zoom * 100)}%</span>
+                </div>
+                <input
+                  type="range" value={zoom} min={1} max={3} step={0.1}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  style={{ width: "100%", accentColor: "var(--blue)", cursor: "pointer" }}
+                />
+              </div>
+              <div style={{ fontSize: 11, color: "var(--sub)", marginBottom: 20, textAlign: "center" }}>
+                Only image files accepted · Drag to reposition · Scroll to zoom
+              </div>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button
+                  onClick={() => setCropModal(false)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 11, border: "1.5px solid var(--border)", background: "white", color: "var(--sub)", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveCrop}
+                  style={{ flex: 2, padding: "12px", borderRadius: 11, border: "none", background: "linear-gradient(135deg,var(--blue2),var(--blue))", color: "white", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 12px rgba(21,96,232,.3)" }}
+                >
+                  Apply & Upload
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* ── Toast ── */}
+      <div style={{
+        position: "fixed", bottom: 28, right: 28,
+        background: toast.toLowerCase().includes("fail") || toast.toLowerCase().includes("only") || toast.toLowerCase().includes("smaller")
+          ? "linear-gradient(135deg,#dc2626,#b91c1c)"
+          : "linear-gradient(135deg,var(--blue2),var(--blue))",
+        color: "white", padding: "12px 22px", borderRadius: 12,
+        fontWeight: 600, fontSize: 13,
+        boxShadow: "0 8px 24px rgba(21,96,232,.35)",
+        display: "flex", alignItems: "center", gap: 8,
+        zIndex: 999,
+        opacity: toast ? 1 : 0,
+        transform: toast ? "translateY(0)" : "translateY(16px)",
+        transition: "all .3s",
+        pointerEvents: "none",
+      }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} width={15} height={15}>
+          {toast.toLowerCase().includes("fail") || toast.toLowerCase().includes("only") || toast.toLowerCase().includes("smaller")
+            ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+            : <polyline points="20 6 9 17 4 12" />
+          }
+        </svg>
+        {toast}
+      </div>
     </>
   );
 }

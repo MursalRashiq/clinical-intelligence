@@ -8,7 +8,8 @@ import { setUser } from "../../redux/user/userSlice";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 
 const OTP_LENGTH = 6;
-const TIMER_START = 59;
+const TIMER_DURATION = 59;
+const TIMER_KEY = "otp_timer_expiry";
 
 export default function VerifyOtp() {
   const location = useLocation();
@@ -18,11 +19,27 @@ export default function VerifyOtp() {
   const email = location.state?.email || "jane@example.com";
   const role = location.state?.role || "patient";
 
+  // Calculate remaining seconds from a persisted expiry timestamp
+  const getRemaining = () => {
+    const expiry = sessionStorage.getItem(TIMER_KEY);
+    if (!expiry) return TIMER_DURATION;
+    const remaining = Math.round((Number(expiry) - Date.now()) / 1000);
+    return remaining > 0 ? remaining : 0;
+  };
+
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [seconds, setSeconds] = useState(TIMER_START);
-  const [timerActive, setTimerActive] = useState(true);
+  const [seconds, setSeconds] = useState<number>(() => {
+    // Initialise from sessionStorage so refresh doesn't reset the timer
+    const remaining = getRemaining();
+    if (!sessionStorage.getItem(TIMER_KEY)) {
+      // First visit — set expiry now
+      sessionStorage.setItem(TIMER_KEY, String(Date.now() + TIMER_DURATION * 1000));
+    }
+    return remaining;
+  });
+  const [timerActive, setTimerActive] = useState(() => getRemaining() > 0);
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -46,7 +63,9 @@ export default function VerifyOtp() {
     try {
       const res = await AuthService.userResendOtp(email);
       if (res?.success) {
-        setSeconds(TIMER_START);
+        // Update the persisted expiry to a fresh window
+        sessionStorage.setItem(TIMER_KEY, String(Date.now() + TIMER_DURATION * 1000));
+        setSeconds(TIMER_DURATION);
         setTimerActive(true);
         toast.success("New code sent!");
       } else {

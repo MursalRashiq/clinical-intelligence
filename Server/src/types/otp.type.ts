@@ -4,7 +4,7 @@ export interface IOtp {
     userData: {
         name: string;
         email: string;
-        phone: string;
+        phone?: string | null | undefined;
         passwordHash: string;
         role: string;
         gender?: "male" | "female" | "other" | null;
@@ -17,7 +17,7 @@ export interface IOtp {
 export interface OTPUserData {
     name: string;
     email: string;
-    phone: string;
+    phone?: string | null | undefined;
     passwordHash: string;
     role: string;
     gender?: "male" | "female" | "other" | null;

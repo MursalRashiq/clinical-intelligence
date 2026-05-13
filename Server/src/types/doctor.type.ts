@@ -19,6 +19,7 @@ export interface IDoctor {
   ratingCount: number;
   isActive: boolean;
   signature?: string | null;
+  rejectionCount: number;
 }
 
 export type IDoctorDocument = IDoctor & Document & {
@@ -51,13 +52,17 @@ export interface DoctorRequestItem {
   userId: Types.ObjectId;
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
   specialty?: string | null;
+  degreeCertificate?: string | null;
+  medicalCertificate?: string | null;
   experienceYears?: number | null;
   verificationStatus: VerificationStatus;
   rejectionReason?: string | null;
   createdAt: Date;
   profileImage?: string | null;
+  VideoFees?: number | null;
+  updatedAt: Date;
 }
 
 export interface DoctorRequestDetail extends DoctorRequestItem {

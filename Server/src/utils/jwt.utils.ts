@@ -7,11 +7,13 @@ import { AppError, UnauthorizedError } from "../errors/AppError";
 import { HttpStatus, MESSAGES } from "../constants/constants";
 
 
-const ACCESS_TOKEN_SECRET = env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKENT_SECRET = env.REFRESH_TOKEN_SECRET;
+// Remove module-level constant captures to ensure we use the latest env values
+// const ACCESS_TOKEN_SECRET = env.ACCESS_TOKEN_SECRET;
+// const REFRESH_TOKENT_SECRET = env.REFRESH_TOKEN_SECRET;
 
-export const generateToken = (user: IUserDocument, doctorId?: string): string => {
-    if(!ACCESS_TOKEN_SECRET) {
+
+export const generateToken = (user: IUserDocument, doctorId?: string, verificationStatus?: string): string => {
+    if(!env.ACCESS_TOKEN_SECRET) {
         throw new AppError(MESSAGES.JWT_SECRET_NOT_PROVIDED, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -21,16 +23,18 @@ export const generateToken = (user: IUserDocument, doctorId?: string): string =>
         role: user.role,
         name: user.name,
         ...(user.profileImage && { profileImage: user.profileImage }),
-        ...(doctorId && {doctorId})  
+        ...(doctorId && {doctorId}),
+        ...(verificationStatus && {verificationStatus}),
+        isActive: user.isActive
     }
 
-    return jwt.sign(payload, ACCESS_TOKEN_SECRET as jwt.Secret, {
+    return jwt.sign(payload, env.ACCESS_TOKEN_SECRET as jwt.Secret, {
          expiresIn: JWT_CONFIG.expireIn, 
         } as jwt.SignOptions);
  };
 
- export const generateRefreshToken = (user: IUserDocument, doctorId?: string): string => {
-    if(!REFRESH_TOKENT_SECRET) {
+ export const generateRefreshToken = (user: IUserDocument, doctorId?: string, verificationStatus?: string): string => {
+    if(!env.REFRESH_TOKEN_SECRET) {
         throw new AppError(MESSAGES.JWT_SECRET_NOT_PROVIDED, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -40,31 +44,33 @@ export const generateToken = (user: IUserDocument, doctorId?: string): string =>
         role: user.role,
         name: user.name,
         ...(user.profileImage && { profileImage: user.profileImage }),
-        ...(doctorId && {doctorId})  
+        ...(doctorId && {doctorId}),
+        ...(verificationStatus && {verificationStatus}),
+        isActive: user.isActive
     }
 
-    return jwt.sign(payload, REFRESH_TOKENT_SECRET as jwt.Secret, {
+    return jwt.sign(payload, env.REFRESH_TOKEN_SECRET as jwt.Secret, {
          expiresIn: JWT_CONFIG.refreshExpireIn, 
         } as jwt.SignOptions);
  };
 
  export const verifyAccessToken = (token: string): JWTPayload => {
-    if(!ACCESS_TOKEN_SECRET) {
+    if(!env.ACCESS_TOKEN_SECRET) {
         throw new AppError(MESSAGES.JWT_SECRET_NOT_PROVIDED, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     try {
-        return jwt.verify(token, ACCESS_TOKEN_SECRET) as JWTPayload;
+        return jwt.verify(token, env.ACCESS_TOKEN_SECRET) as JWTPayload;
     } catch (_err) {
         throw new UnauthorizedError(MESSAGES.INVALID_ACCESS_TOKEN);
     }
 };
 
 export const verifyRefreshToken = (token: string): JWTPayload => {
-    if(!REFRESH_TOKENT_SECRET) {
+    if(!env.REFRESH_TOKEN_SECRET) {
         throw new AppError(MESSAGES.JWT_SECRET_NOT_PROVIDED, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     try {
-        return jwt.verify(token, REFRESH_TOKENT_SECRET) as JWTPayload;
+        return jwt.verify(token, env.REFRESH_TOKEN_SECRET) as JWTPayload;
     } catch (_err) {
         throw new UnauthorizedError(MESSAGES.INVALID_REFRESH_TOKEN);
     }

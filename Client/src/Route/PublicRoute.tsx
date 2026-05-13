@@ -20,7 +20,10 @@ const PublicRoute: React.FC<Props> = ({ children, roleScope = "user" }) => {
     }
   } else if (roleScope === "doctor") {
     if (currentUser && currentUser.role === "doctor") {
-      return <Navigate to={FRONTEND_ROUTES.HOME} replace />; // Or doctor dashboard if available
+      if (currentUser.verificationStatus === "Pending") {
+        return <Navigate to={FRONTEND_ROUTES.DOCTOR_PENDING} replace />;
+      }
+      return <Navigate to={FRONTEND_ROUTES.DOCTOR_DASHBOARD} replace />;
     }
   } else {
     if (currentUser) {

@@ -26,8 +26,18 @@ const ProtectedRoute: React.FC<Props> = ({ children, role }) => {
         return <Navigate to={FRONTEND_ROUTES.LOGIN} replace />;
     }
 
-    if (currentUser.role !== role) {
+    // Normalize: backend may return "user" but the route expects "patient"
+    const userRole = currentUser.role === "user" ? "patient" : currentUser.role;
+    if (userRole !== role) {
+        // Redirect doctors to their own dashboard, everyone else to home
+        if (currentUser.role === "doctor") {
+            return <Navigate to={FRONTEND_ROUTES.DOCTOR_DASHBOARD} replace />;
+        }
         return <Navigate to={FRONTEND_ROUTES.HOME} replace />;
+    }
+
+    if (currentUser.isActive === false) {
+        return <Navigate to={`${FRONTEND_ROUTES.LOGIN}?error=blocked`} replace />;
     }
 
     return children;

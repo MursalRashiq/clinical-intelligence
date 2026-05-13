@@ -33,3 +33,27 @@ export interface SubmitVerificationDTO {
   chatFees: string;
   certificateFile?: File | null;
 }
+
+export interface FormData {
+  Name: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  // Step 2 – Verification
+  licenseNumber: string;
+  degree: string;
+  yearsOfPractice: string;
+  primarySpecialty: string;
+  customSpecialty: string;
+  about: string;
+  // Step 3 – Specialty (reuses Step 2 specialty fields, step 3 is just specialty)
+  // Step 4 – Fees
+  videoFee: string;
+  videoEnabled: boolean;
+  chatFee: string;
+  chatEnabled: boolean;
+  // Step 5 – Documents
+  medicalLicense: File | null;
+  degreeCertificate: File | null;
+}

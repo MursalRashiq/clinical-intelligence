@@ -122,7 +122,7 @@ const Hero = ({ onBook: _onBook }: { onBook: (name: string) => void }) => {
         {/* CTA buttons */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Link
-            to={FRONTEND_ROUTES.HOME}
+            to={FRONTEND_ROUTES.DOCTORS}
             style={{
               padding: "14px 30px",
               border: "none",
@@ -408,7 +408,7 @@ const DoctorsSection = ({ onBook }: { onBook: (name: string) => void }) => (
 
     <div style={{ textAlign: "center", marginTop: 36 }}>
       <Link
-        to={FRONTEND_ROUTES.HOME}
+        to={FRONTEND_ROUTES.DOCTORS}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -498,7 +498,7 @@ const CtaBanner = () => {
           </Link>
         )}
         <Link
-          to={FRONTEND_ROUTES.HOME}
+          to={FRONTEND_ROUTES.DOCTORS}
           style={{
             padding: "13px 26px",
             border: "1.5px solid rgba(255,255,255,.35)",

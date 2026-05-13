@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import AuthService from "../../services/AuthService";
 

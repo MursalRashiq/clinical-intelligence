@@ -4,9 +4,14 @@ import Sidebar from "../../components/Admin/Sidebar";
 import TopNav from "../../components/Admin/TopNav";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar, BarChart, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Pie, PieChart, Label } from "recharts";
-import { TrendingUp, Download, Users, Activity, Calendar, DollarSign } from "lucide-react";
+import { TrendingUp, Download, Users, Activity, Calendar, DollarSign, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { theme as t } from "../../theme";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { adminService } from "../../services/AdminService";
+import { logoutAdmin } from "../../redux/admin/adminSlice";
+import { FRONTEND_ROUTES } from "../../utils/constants";
 
 // --- Mock Data ---
 const MOCK_STATS = {
@@ -42,6 +47,8 @@ const MOCK_STATS = {
 const Dashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [stats] = useState<any>(MOCK_STATS);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     // Prevent back button from navigating to login page
     useEffect(() => {
@@ -90,6 +97,18 @@ const Dashboard = () => {
     const handleDownloadReport = () => {
         toast.info("Generating static PDF report...");
         setTimeout(() => toast.success("Report downloaded successfully"), 2000);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await adminService.logoutAdmin();
+            dispatch(logoutAdmin());
+            toast.success("Logged out successfully");
+            navigate(FRONTEND_ROUTES.ADMIN_LOGIN);
+        } catch (error) {
+            console.error("Logout failed:", error);
+            toast.error("Logout failed. Please try again.");
+        }
     };
 
     const cardStyle = {
@@ -188,26 +207,50 @@ const Dashboard = () => {
                                 <h3 style={{ fontSize: 13, fontWeight: 700, color: t.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>Global Statistics</h3>
                                 <p style={{ fontSize: 11, color: t.sub }}>Daily performance overview</p>
                             </div>
-                            <button
-                                onClick={handleDownloadReport}
-                                style={{
-                                    padding: "10px 20px",
-                                    background: `linear-gradient(135deg, ${t.blue}, ${t.blue2})`,
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: 12,
-                                    fontSize: 13,
-                                    fontWeight: 700,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 8,
-                                    cursor: "pointer",
-                                    boxShadow: "0 4px 12px rgba(21,96,232,0.2)"
-                                }}
-                            >
-                                <Download size={16} />
-                                Download Report
-                            </button>
+                            <div style={{ display: "flex", gap: 12 }}>
+                                <button
+                                    onClick={handleDownloadReport}
+                                    style={{
+                                        padding: "10px 20px",
+                                        background: `linear-gradient(135deg, ${t.blue}, ${t.blue2})`,
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: 12,
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                        cursor: "pointer",
+                                        boxShadow: "0 4px 12px rgba(21,96,232,0.2)"
+                                    }}
+                                >
+                                    <Download size={16} />
+                                    Download Report
+                                </button>
+                                <button
+                                    onClick={handleLogout}
+                                    style={{
+                                        padding: "10px 20px",
+                                        background: "white",
+                                        color: "#f43f5e",
+                                        border: "1.5px solid #fff1f2",
+                                        borderRadius: 12,
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 8,
+                                        cursor: "pointer",
+                                        transition: "all 0.2s"
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#fff1f2"}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
+                                >
+                                    <LogOut size={16} />
+                                    Logout
+                                </button>
+                            </div>
                         </div>
 
                         {/* Stats Grid */}
