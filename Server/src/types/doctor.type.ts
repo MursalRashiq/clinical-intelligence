@@ -1,5 +1,5 @@
 import { Types, Document } from 'mongoose';
-import { VerificationStatus } from '../dtos/doctor.dto/doctor.dto'
+import { VerificationStatus } from '../dtos/doctor.dto/doctor.dto';
 import { IUserDocument } from './user.type';
 
 export interface IDoctor {
@@ -22,14 +22,15 @@ export interface IDoctor {
   rejectionCount: number;
 }
 
-export type IDoctorDocument = IDoctor & Document & {
-  _id: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-  customId: string
-}
+export type IDoctorDocument = IDoctor &
+  Document & {
+    _id: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
+    customId: string;
+  };
 
-export interface IDoctorPopulated extends Omit<IDoctor, "userId"> {
+export interface IDoctorPopulated extends Omit<IDoctor, 'userId'> {
   _id: Types.ObjectId;
   userId: IUserDocument;
   createdAt: Date;
@@ -74,6 +75,6 @@ export interface DoctorRequestDetail extends DoctorRequestItem {
   verificationDocuments: string[];
   isActive: boolean;
   updatedAt: Date;
-  gender?: "male" | "female" | "other" | null;
+  gender?: 'male' | 'female' | 'other' | null;
   dob?: Date | null;
 }

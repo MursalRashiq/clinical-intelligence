@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { selectCurrentUser, logout, setUser } from "../../redux/user/userSlice";
+import { selectCurrentDoctor, setDoctor, logoutDoctor } from "../../redux/doctor/doctorSlice";
 import AuthService from "../../services/AuthService";
 import PatientService from "../../services/PatientService";
 import { FRONTEND_ROUTES } from "../../utils/constants";
@@ -117,21 +117,21 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function DoctorProfilePage() {
   const dispatch = useDispatch(); const navigate = useNavigate();
-  const currentUser = useSelector(selectCurrentUser);
+  const currentDoctor = useSelector(selectCurrentDoctor);
   const [activeNav, setActiveNav] = useState("Profile Settings");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
   const [modal, setModal] = useState<"personal" | "professional" | "address" | "languages" | null>(null);
   const [newLang, setNewLang] = useState("");
 
-  const doctorName = currentUser?.name ? `Dr. ${currentUser.name}` : "Doctor";
+  const doctorName = (currentDoctor?.role === 'doctor' && currentDoctor?.name) ? `Dr. ${currentDoctor.name}` : "Doctor";
 
   const empty: DoctorProfile = {
-    fullName: currentUser?.name || "", email: currentUser?.email || "", phone: "",
+    fullName: currentDoctor?.name || "", email: currentDoctor?.email || "", phone: "",
     address: "", city: "", state: "", country: "", pincode: "",
     bloodGroup: "", experience: "", specialty: "",
     videoFee: "", chatFee: "", about: "", languages: [],
-    profileImage: currentUser?.profileImage || null,
+    profileImage: currentDoctor?.profileImage || null,
     licenseNumber: "", ratingAvg: 0, ratingCount: 0,
     verificationDocuments: [], qualifications: [],
   };
@@ -153,8 +153,8 @@ export default function DoctorProfilePage() {
       const docUser = (d?.userId && typeof d.userId === 'object') ? d.userId as any : null;
 
       const mapped: DoctorProfile = {
-        fullName: u?.name || docUser?.name || currentUser?.name || "",
-        email: u?.email || docUser?.email || currentUser?.email || "",
+        fullName: u?.name || docUser?.name || currentDoctor?.name || "",
+        email: u?.email || docUser?.email || currentDoctor?.email || "",
         phone: u?.phone || docUser?.phone || "",
         address: u?.address || docUser?.address || "",
         city: u?.city || docUser?.city || "",
@@ -169,7 +169,7 @@ export default function DoctorProfilePage() {
         about: d?.about || "",
         languages: d?.languages || [],
         // Use the presigned URL from user profile endpoint (u.profileImage) first
-        profileImage: u?.profileImage || docUser?.profileImage || currentUser?.profileImage || null,
+        profileImage: u?.profileImage || docUser?.profileImage || currentDoctor?.profileImage || null,
         licenseNumber: d?.licenseNumber || "",
         ratingAvg: d?.ratingAvg || 0,
         ratingCount: d?.ratingCount || 0,
@@ -178,10 +178,10 @@ export default function DoctorProfilePage() {
       };
       setProfile(mapped); setDraft(mapped);
     }).catch(err => {
-      if (err?.response?.status === 403) { dispatch(logout()); navigate(`${FRONTEND_ROUTES.DOCTOR_LOGIN}?error=blocked`, { replace: true }); }
+      if (err?.response?.status === 403) { dispatch(logoutDoctor()); navigate(`${FRONTEND_ROUTES.DOCTOR_LOGIN}?error=blocked`, { replace: true }); }
       console.error("Failed to fetch doctor profile:", err);
     });
-  }, [currentUser]);
+  }, [currentDoctor?.id, dispatch, navigate]);
 
   const openModal = (m: typeof modal) => { setDraft({ ...profile }); setModal(m); };
   const closeModal = () => setModal(null);
@@ -230,9 +230,9 @@ export default function DoctorProfilePage() {
         showToast("Profile updated successfully!");
 
         // Sync new name/image into Redux store
-        const userInfo = AuthService.getCurrentUserInfo();
+        const userInfo = AuthService.getCurrentUserInfo("doctor");
         if (userInfo) {
-          dispatch(setUser({ ...userInfo, profileImage: updatedProfile?.profileImage, name: updatedProfile?.name } as any));
+          dispatch(setDoctor({ ...userInfo, profileImage: updatedProfile?.profileImage, name: updatedProfile?.name } as any));
         }
       } else {
         showToast(res?.message || "Update failed.");
@@ -365,7 +365,7 @@ export default function DoctorProfilePage() {
         showToast("Profile picture updated!");
         const userInfo = AuthService.getCurrentUserInfo();
         if (userInfo) {
-          dispatch(setUser({ ...userInfo, profileImage: newImgUrl } as any));
+          dispatch(setDoctor({ ...userInfo, profileImage: newImgUrl } as any));
         }
       } else {
         showToast(res?.message || "Upload failed.");
@@ -415,7 +415,7 @@ export default function DoctorProfilePage() {
       `}</style>
 
       <div style={{ fontFamily: "Inter,sans-serif", background: "#faf8ff", minHeight: "100vh", color: "#191b23" }}>
-        <DoctorSidebar doctorName={doctorName} specialty={(currentUser as any)?.specialty || profile.specialty || "Specialist"} activeNav={activeNav} onNavChange={setActiveNav} onLogout={async () => { await AuthService.logout(); dispatch(logout()); navigate(FRONTEND_ROUTES.DOCTOR_LOGIN); }} />
+        <DoctorSidebar doctorName={doctorName} specialty={(currentDoctor?.role === 'doctor' && ((currentDoctor as any)?.specialty || profile.specialty)) || "Specialist"} activeNav={activeNav} onNavChange={setActiveNav} onLogout={async () => { await AuthService.logout("doctor"); dispatch(logoutDoctor()); navigate(FRONTEND_ROUTES.DOCTOR_LOGIN); }} />
         <TopNav />
 
         <main style={{ marginLeft: 256, paddingTop: 64, minHeight: "100vh" }}>

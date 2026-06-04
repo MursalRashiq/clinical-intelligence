@@ -1,1 +1,4 @@
-import type { SubmitVerificationDTO, VerificationStatus } from "../../dtos/doctor.dto/doctor.dto";
+import type {
+  SubmitVerificationDTO,
+  VerificationStatus,
+} from '../../dtos/doctor.dto/doctor.dto';

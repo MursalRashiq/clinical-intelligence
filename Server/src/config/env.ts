@@ -1,103 +1,108 @@
 import dotenv from 'dotenv';
-dotenv.config(); 
-
+dotenv.config();
 
 export const env = {
+  get MONGODB_URI() {
+    return process.env.MONGO_URI || '';
+  },
 
-    get MONGODB_URI() {
-        return process.env.MONGO_URI || '';
-    },
+  get PORT() {
+    return process.env.PORT || '3000';
+  },
 
-    get PORT() {
-        return process.env.PORT || '3000';
-    },
+  get NODE_ENV() {
+    return process.env.NODE_ENV || 'development';
+  },
 
-    get NODE_ENV() {
-        return process.env.NODE_ENV || 'development';
-    },
+  get ACCESS_TOKEN_SECRET() {
+    return process.env.ACCESS_TOKEN_SECRET || '';
+  },
 
-    get ACCESS_TOKEN_SECRET() {
-        return process.env.ACCESS_TOKEN_SECRET || '';
-    },
+  get REFRESH_TOKEN_SECRET() {
+    return process.env.REFRESH_TOKEN_SECRET || '';
+  },
 
-    get REFRESH_TOKEN_SECRET() {
-        return process.env.REFRESH_TOKEN_SECRET || '';
-    },
+  get ACCESS_TOKEN_EXPIRES_IN() {
+    return process.env.ACCESS_TOKEN_EXPIRE || '30m';
+  },
 
-    get ACCESS_TOKEN_EXPIRES_IN(){
-        return process.env.ACCESS_TOKEN_EXPIRE || "30m"
-    },
+  get REFRESH_TOKEN_EXPIRES_IN() {
+    return process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
+  },
 
-    get REFRESH_TOKEN_EXPIRES_IN() {
-        return process.env.REFRESH_TOKEN_EXPIRES_IN || "30d"
-    },
+  get REFRESH_TOKEN_MAX_AGE() {
+    return Number(process.env.REFRESH_TOKEN_MAX_AGE);
+  },
 
-    get REFRESH_TOKEN_MAX_AGE() {
-        return Number(process.env.REFRESH_TOKEN_MAX_AGE);
-    },
+  get SESSION_MAX_AGE() {
+    return Number(process.env.SESSION_MAX_AGE);
+  },
 
-    get SESSION_MAX_AGE() {
-        return Number(process.env.SESSION_MAX_AGE);
-    },
+  get SMTP_HOST() {
+    return process.env.SMTP_HOST || '';
+  },
 
-    get SMTP_HOST() {
-        return process.env.SMTP_HOST || "";
-    },
+  get SMTP_PORT() {
+    return process.env.SMTP_PORT || '';
+  },
 
-    get SMTP_PORT() {
-        return process.env.SMTP_PORT || "";
-    },
+  get SMTP_USER() {
+    return process.env.SMTP_USER || '';
+  },
 
-    get SMTP_USER() {
-        return process.env.SMTP_USER || "";
-    },
+  get SMTP_PASS() {
+    return process.env.SMTP_PASS || '';
+  },
 
-    get SMTP_PASS() {
-        return process.env.SMTP_PASS || "";
-    },
+  get SESSION_SECRET() {
+    return process.env.SESSION_SECRET;
+  },
 
-    get SESSION_SECRET() {
-        return process.env.SESSION_SECRET;
-    },
+  get CLIENT_URL() {
+    return process.env.CLIENT_URL;
+  },
 
-    get CLIENT_URL() {
-        return process.env.CLIENT_URL;
-    },
+  get CLIENT_URL_1() {
+    return process.env.CLIENT_URL_1;
+  },
 
-    get CLIENT_URL_1() {
-        return process.env.CLIENT_URL_1
-    },
+  get CLIENT_URL_2() {
+    return process.env.CLIENT_URL_2;
+  },
 
-    get CLIENT_URL_2() {
-        return process.env.CLIENT_URL_2
-    },
+  get GOOGLE_CLIENT_ID() {
+    return process.env.GOOGLE_CLIENT_ID || '';
+  },
 
-    get GOOGLE_CLIENT_ID() {
-        return process.env.GOOGLE_CLIENT_ID ||  ""
-    },
+  get GOOGLE_CLIENT_SECRET() {
+    return process.env.GOOGLE_CLIENT_SECRET || '';
+  },
 
-    get GOOGLE_CLIENT_SECRET() {
-        return process.env.GOOGLE_CLIENT_SECRET ||  ""
-    },
+  get GOOGLE_CALLBACK_URL() {
+    return process.env.GOOGLE_CALLBACK_URL || '';
+  },
 
-    get GOOGLE_CALLBACK_URL() {
-        return process.env.GOOGLE_CALLBACK_URL ||  ""
-    },
+  get AWS_ACCESS_KEY_ID() {
+    return process.env.AWS_ACCESS_KEY_ID;
+  },
 
-    get AWS_ACCESS_KEY_ID(){
-        return process.env.AWS_ACCESS_KEY_ID
-    },
+  get AWS_SECRET_ACCESS_KEY() {
+    return process.env.AWS_SECRET_ACCESS_KEY;
+  },
 
-    get AWS_SECRET_ACCESS_KEY() {
-        return process.env.AWS_SECRET_ACCESS_KEY
-    },
+  get AWS_REGION() {
+    return process.env.AWS_REGION;
+  },
 
-    get AWS_REGION(){
-        return process.env.AWS_REGION
-    },
+  get AWS_BUCKET_NAME() {
+    return process.env.AWS_BUCKET_NAME;
+  },
 
-    get AWS_BUCKET_NAME(){
-        return process.env.AWS_BUCKET_NAME
-    }
-    
-}
+  get RAZORPAY_API_KEY() {
+    return process.env.RAZORPAY_API_KEY || '';
+  },
+
+  get RAZORPAY_API_SECRET() {
+    return process.env.RAZORPAY_API_SECRET || '';
+  },
+};

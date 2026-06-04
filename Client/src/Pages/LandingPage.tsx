@@ -12,7 +12,7 @@ import BookModal     from "../components/Patient/BookModal";
 import HeartbeatIcon from "../components/HeartbeatIcon";
 
 // ─── Shared data & theme ─────────────────────────────────────────────────────
-import { doctors, specialties } from "../types/data";
+import { specialties } from "../types/data";
 import { theme as t }           from "../theme";
 import { FRONTEND_ROUTES }      from "../utils/constants";
 
@@ -368,7 +368,11 @@ const SpecialtiesSection = () => (
 // Doctors Section
 // ─────────────────────────────────────────────────────────────────────────────
 
-const DoctorsSection = ({ onBook }: { onBook: (name: string) => void }) => (
+// ─────────────────────────────────────────────────────────────────────────────
+// Doctors Section
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DoctorsSection = ({ doctors: displayedDoctors, loading, onBook }: { doctors: any[], loading: boolean, onBook: (name: string) => void }) => (
   <div id="doctors" style={{ padding: "0 clamp(20px, 5vw, 80px) 72px", background: "white" }}>
     <div
       style={{
@@ -400,11 +404,21 @@ const DoctorsSection = ({ onBook }: { onBook: (name: string) => void }) => (
       Trusted specialists ready to help you feel better, faster.
     </div>
 
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 22 }}>
-      {doctors.map((doc) => (
-        <DoctorCard key={doc.id} doctor={doc} onBook={onBook} />
-      ))}
-    </div>
+    {loading ? (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+        <div style={{ width: 40, height: 40, border: '4px solid #1560e833', borderTop: '4px solid #1560e8', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      </div>
+    ) : displayedDoctors.length === 0 ? (
+      <div style={{ textAlign: 'center', padding: '40px 0', color: t.sub }}>
+        <p style={{ fontSize: 16, fontWeight: 600 }}>No doctors currently available.</p>
+      </div>
+    ) : (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 22 }}>
+        {displayedDoctors.map((doc) => (
+          <DoctorCard key={doc.id} doctor={doc} onBook={onBook} />
+        ))}
+      </div>
+    )}
 
     <div style={{ textAlign: "center", marginTop: 36 }}>
       <Link
@@ -420,7 +434,10 @@ const DoctorsSection = ({ onBook }: { onBook: (name: string) => void }) => (
           fontSize: 15,
           fontWeight: 600,
           textDecoration: "none",
+          transition: "all 0.2s"
         }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = t.blue; e.currentTarget.style.color = t.blue; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.text; }}
       >
         View All Doctors →
       </Link>
@@ -520,9 +537,44 @@ const CtaBanner = () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // HomePage — root export
 // ─────────────────────────────────────────────────────────────────────────────
+import { useEffect } from "react";
+import doctorService from "../services/DoctorService";
 
 const HomePage = () => {
   const [bookingDoctor, setBookingDoctor] = useState<string | null>(null);
+  const [realDoctors, setRealDoctors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await doctorService.getAllDoctors({ hasSlots: true });
+        if (res.success && res.data) {
+          const mapped = res.data.doctors.slice(0, 3).map((d: any) => {
+            const user = d.userId;
+            const address = user?.address;
+            const location = address?.city ? `${address.city}${address.state ? `, ${address.state}` : ''}` : "Virtual / Online";
+            return {
+              id: d._id,
+              name: `Dr. ${user?.name || "Unknown"}`,
+              specialty: d.specialty || "General Specialist",
+              location: location,
+              fee: `₹${d.VideoFees || 500}`,
+              rating: d.ratingAvg || 4.5,
+              available: d.isActive,
+              photo: user?.profileImage || "",
+            };
+          });
+          setRealDoctors(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch doctors", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
 
   return (
     <div
@@ -544,7 +596,7 @@ const HomePage = () => {
       {/* ── Page-specific sections ── */}
       <Hero           onBook={setBookingDoctor} />
       <SpecialtiesSection />
-      <DoctorsSection onBook={setBookingDoctor} />
+      <DoctorsSection doctors={realDoctors} loading={loading} onBook={setBookingDoctor} />
       <CtaBanner />
 
       {/* ── Shared reusable component ── */}

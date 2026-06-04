@@ -1,13 +1,13 @@
-import mongoose, { Schema, Model } from "mongoose";
+import mongoose, { Schema, Model } from 'mongoose';
 
-import { IDoctorDocument } from "../types/doctor.type";
-import { VerificationStatus } from "../dtos/doctor.dto/doctor.dto";
+import { IDoctorDocument } from '../types/doctor.type';
+import { VerificationStatus } from '../dtos/doctor.dto/doctor.dto';
 
 const DoctorSchema = new Schema<IDoctorDocument>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
       unique: true,
     },
@@ -41,7 +41,7 @@ const DoctorSchema = new Schema<IDoctorDocument>(
     },
     about: {
       type: String,
-      default: null
+      default: null,
     },
     languages: {
       type: [String],
@@ -88,22 +88,22 @@ const DoctorSchema = new Schema<IDoctorDocument>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
-
 
 DoctorSchema.index({ specialty: 1 });
 DoctorSchema.index({ verificationStatus: 1 });
 DoctorSchema.index({ isActive: 1 });
 
-DoctorSchema.virtual("user", {
-  ref: "User",
-  localField: "userId",
-  foreignField: "_id",
+DoctorSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: '_id',
   justOne: true,
 });
 
 const DoctorModel: Model<IDoctorDocument> =
-  mongoose.models.Doctor || mongoose.model<IDoctorDocument>("Doctor", DoctorSchema);
+  mongoose.models.Doctor ||
+  mongoose.model<IDoctorDocument>('Doctor', DoctorSchema);
 
 export default DoctorModel;

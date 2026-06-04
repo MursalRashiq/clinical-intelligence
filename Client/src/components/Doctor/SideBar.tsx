@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FRONTEND_ROUTES } from "../../utils/constants";
+import ConfirmModal from "../Ui/ConfirmModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavItem {
@@ -21,8 +22,8 @@ interface DoctorSidebarProps {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const NAV_ITEMS: NavItem[] = [
   { icon: "dashboard",               label: "Dashboard",          fill: true, route: FRONTEND_ROUTES.DOCTOR_DASHBOARD },
-  { icon: "pending_actions",         label: "Requests" },
-  { icon: "calendar_today",          label: "Appointments" },
+  { icon: "pending_actions",         label: "Requests",           route: FRONTEND_ROUTES.DOCTOR_REQUESTS },
+  { icon: "calendar_today",          label: "Appointments",       route: FRONTEND_ROUTES.DOCTOR_APPOINTMENTS },
   { icon: "schedule",                label: "Available Timings",   route: FRONTEND_ROUTES.DOCTOR_SLOTS },
   { icon: "account_balance_wallet",  label: "Wallet" },
   { icon: "chat",                    label: "Message" },
@@ -45,12 +46,13 @@ export default function DoctorSidebar({
 }: DoctorSidebarProps) {
   const navigate = useNavigate();
   const [internalActive, setInternalActive] = useState("Dashboard");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const activeNav = controlledActiveNav ?? internalActive;
 
   function handleNavClick(item: NavItem) {
     if (item.label === "Logout") {
-      onLogout?.();
+      setShowLogoutConfirm(true);
       return;
     }
     setInternalActive(item.label);
@@ -160,6 +162,19 @@ export default function DoctorSidebar({
             New Appointment
           </button>
         </div>
+
+        <ConfirmModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={() => {
+            setShowLogoutConfirm(false);
+            onLogout?.();
+          }}
+          title="Sign Out"
+          message="Are you sure you want to sign out from your clinical dashboard?"
+          confirmText="Sign Out"
+          type="danger"
+        />
       </aside>
     </>
   );

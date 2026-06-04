@@ -2,8 +2,21 @@ import axiosInstance from "../api/axiosInstance";
 import { DOCTOR_API_ROUTES } from "../utils/constants";
 
 export class DoctorServiceClass {
-    async getAllDoctors(filters: { search?: string; specialty?: string; hasSlots?: boolean } = {}) {
+    async getAllDoctors(filters: {
+      search?: string;
+      specialty?: string;
+      hasSlots?: boolean;
+
+      minRating?: number;
+
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+
+      page?: number;
+      limit?: number;
+   } = {}) {
         try {
+            console.log(DOCTOR_API_ROUTES.LIST_DOCTORS, filters, "Fetching doctors with filters");
             const res = await axiosInstance.get(DOCTOR_API_ROUTES.LIST_DOCTORS, {
                 params: filters
             });
@@ -99,6 +112,44 @@ export class DoctorServiceClass {
         try {
             const url = DOCTOR_API_ROUTES.DELETE_RECURRING_SLOT_BY_TIME(startTime, endTime);
             const res = await axiosInstance.delete(url);
+            return res.data;
+        } catch (error: any) {
+            throw error.response?.data || error.message;
+        }
+    }
+
+    async deleteSchedule(doctorId?: string) {
+        try {
+            const url = DOCTOR_API_ROUTES.DELETE_SCHEDULE(doctorId);
+            const res = await axiosInstance.delete(url);
+            return res.data;
+        } catch (error: any) {
+            throw error.response?.data || error.message;
+        }
+    }
+
+    async addSpecificDateSlots(data: any) {
+        try {
+            const res = await axiosInstance.post(DOCTOR_API_ROUTES.SPECIFIC_DATE_SLOTS, data);
+            return res.data;
+        } catch (error: any) {
+            throw error.response?.data || error.message;
+        }
+    }
+
+    async deleteSpecificDateSlot(date: string, slotId: string) {
+        try {
+            const url = DOCTOR_API_ROUTES.DELETE_SPECIFIC_DATE_SLOT(date, slotId);
+            const res = await axiosInstance.delete(url);
+            return res.data;
+        } catch (error: any) {
+            throw error.response?.data || error.message;
+        }
+    }
+
+    async getDoctorDetailsById(doctorId: string) {
+        try {
+            const res = await axiosInstance.get(`/api/v1/users/doctors/${doctorId}`);
             return res.data;
         } catch (error: any) {
             throw error.response?.data || error.message;

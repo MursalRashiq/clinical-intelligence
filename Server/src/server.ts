@@ -1,51 +1,51 @@
-import express from "express";
-import dotenv from "dotenv";
-import logger from "./utils/logger";
-import connectDB from "./config/db";
-import morgan from "morgan";
-import { env } from "./config/env";
-import cookieParser from "cookie-parser";
+import express from 'express';
+import dotenv from 'dotenv';
+import logger from './utils/logger';
+import connectDB from './config/db';
+import morgan from 'morgan';
+import { env } from './config/env';
+import cookieParser from 'cookie-parser';
 import session from 'express-session';
-import cors from 'cors'
+import cors from 'cors';
 import passport from 'passport';
 
-
 import authRouter from './routes/auth.router';
-import adminRouter from './routes/admin.route'
+import adminRouter from './routes/admin.route';
 import doctorRouter from './routes/doctor.route';
 import userRouter from './routes/user.route';
-import { CONFIG } from "./constants/constants";
-import { BASE_ROUTES } from "./constants/routes.constants";
+import { CONFIG } from './constants/constants';
+import { BASE_ROUTES } from './constants/routes.constants';
 
+dotenv.config();
 
-dotenv.config()
-
-const sessionSecret = env.SESSION_SECRET
+const sessionSecret = env.SESSION_SECRET;
 if (!sessionSecret) {
-  throw new Error("SESSION_SECRET is required")
+  throw new Error('SESSION_SECRET is required');
 }
 
 connectDB();
-const app = express()
+const app = express();
 
 const corsOptions = {
-  origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-
+  origin: (
+    requestOrigin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => {
     if (!requestOrigin) return callback(null, true);
 
     const allowedOrigins = [
       env.CLIENT_URL,
       env.CLIENT_URL_1,
       env.CLIENT_URL_2,
-      "http://localhost:5173",
-      "http://127.0.0.1:5173"
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
     ];
 
     if (!requestOrigin || allowedOrigins.includes(requestOrigin)) {
       return callback(null, true);
     } else {
       console.warn(`[CORS] Origin ${requestOrigin} not allowed`);
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -53,10 +53,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(morgan('dev'))
-app.use(cookieParser())
-app.use(express.json({ limit: "50mb" }))
-app.use(express.urlencoded({ limit: "50mb", extended: true }))
+app.use(morgan('dev'));
+app.use(cookieParser());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(
   session({
@@ -66,32 +66,39 @@ app.use(
     cookie: {
       secure: false,
       httpOnly: true,
-      maxAge: CONFIG.SESSION_MAX_AGE
-    }
-  })
-)
+      maxAge: CONFIG.SESSION_MAX_AGE,
+    },
+  }),
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/", (req, res) => {
+app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: "Clinical Intelligence API is running...",
-    version: "1.0.0",
+    message: 'Clinical Intelligence API is running...',
+    version: '1.0.0',
     timestamp: new Date().toISOString(),
-  })
-})
+  });
+});
 
 app.use(BASE_ROUTES.AUTH, authRouter);
+console.log(
+  'Auth route loaded',
+  `http://localhost:${env.PORT}${BASE_ROUTES.AUTH}`,
+);
 app.use(BASE_ROUTES.ADMIN, adminRouter);
 app.use(BASE_ROUTES.DOCTORS, doctorRouter);
 app.use(BASE_ROUTES.USERS, userRouter);
-app.use(BASE_ROUTES.PATIENTS, userRouter);
+import appointmentRouter from './routes/appointment.router';
+app.use(BASE_ROUTES.APPOINTMENTS, appointmentRouter);
 
-import { errorHandler } from "./middlewares/error.handler.middleware";
+import paymentRouter from './routes/payment.router';
+app.use(BASE_ROUTES.PAYMENTS, paymentRouter);
+
+import { errorHandler } from './middlewares/error.handler.middleware';
 app.use(errorHandler);
-
 
 const PORT = env.PORT;
 app.listen(PORT, () => {
@@ -102,5 +109,4 @@ app.listen(PORT, () => {
  Mode: ${process.env.NODE_ENV}
 =================================
 `);
-})
-
+});

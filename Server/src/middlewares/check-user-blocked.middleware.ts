@@ -1,33 +1,32 @@
-import { Request, Response, NextFunction } from "express";
-import { HttpStatus, MESSAGES } from "../constants/constants";
-import { LoggerService } from "../services/logger.service";
+import { Request, Response, NextFunction } from 'express';
+import { HttpStatus, MESSAGES } from '../constants/constants';
+import { LoggerService } from '../services/logger.service';
 
-const logger = new LoggerService("CheckUserBlocked");
+const logger = new LoggerService('CheckUserBlocked');
 
 export const checkUserBlocked = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ): Promise<void> => {
-    try {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
 
-        const userId = req.user?.userId;
-        const userRole = req.user?.role;
-
-        if (!userId || !userRole) {
-            res.status(HttpStatus.UNAUTHORIZED).json({
-                success: false,
-                message: MESSAGES.UNAUTHORIZED,
-            });
-            return;
-        }
-
-        next();
-    } catch (error) {
-        logger.error("check user blocked error", error);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: MESSAGES.SERVER_ERROR
-        })
+    if (!userId || !userRole) {
+      res.status(HttpStatus.UNAUTHORIZED).json({
+        success: false,
+        message: MESSAGES.UNAUTHORIZED,
+      });
+      return;
     }
-}
+
+    next();
+  } catch (error) {
+    logger.error('check user blocked error', error);
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: MESSAGES.SERVER_ERROR,
+    });
+  }
+};

@@ -1,61 +1,69 @@
-import { Document, Types } from "mongoose";
-
+import { Document, Types } from 'mongoose';
 
 export interface ITimeSlot {
-    customId?: string;
-    startTime: string;
-    endTime: string;
-    enabled?: boolean;
-    booked?: boolean;
+  customId?: string;
+  date?: Date;
+  startDate?: Date;
+  endDate?: Date;
+  startTime: string;
+  endTime: string;
+  enabled?: boolean;
+  booked?: boolean;
 }
-
 
 export type DayOfWeek =
-    | "Monday"
-    | "Tuesday"
-    | "Wednesday"
-    | "Thursday"
-    | "Friday"
-    | "Saturday"
-    | "Sunday";
+  | 'Monday'
+  | 'Tuesday'
+  | 'Wednesday'
+  | 'Thursday'
+  | 'Friday'
+  | 'Saturday'
+  | 'Sunday';
 
 export interface IDaySchedule {
-    day: DayOfWeek;
-    enabled: boolean;
-    slots: ITimeSlot[];
+  day: DayOfWeek;
+  enabled: boolean;
+  slots: ITimeSlot[];
 }
 
-
 export interface IBlockedDate {
-    date: Date;
-    reason?: string | null;
-    slots?: string[];
+  date: Date;
+  reason?: string | null;
+  slots?: string[];
+}
+
+export interface ISpecificDateSlot {
+  date: Date;
+  slots: ITimeSlot[];
 }
 
 export interface IDoctorSchedule {
-    customId?: string;
-    doctorId: Types.ObjectId;
-    weeklySchedule: IDaySchedule[];
-    blockedDates?: IBlockedDate[];
-    defaultSlotDuration: number;
-    bufferTime: number;
-    maxPatientsPerSlot: number;
-    isActive: boolean;
+  customId?: string;
+  doctorId: Types.ObjectId;
+  weeklySchedule: IDaySchedule[];
+  specificDateSlots?: ISpecificDateSlot[];
+  blockedDates?: IBlockedDate[];
+  defaultSlotDuration: number;
+  bufferTime: number;
+  maxPatientsPerSlot: number;
+  isActive: boolean;
+  startDate?: Date | null;
+  endDate?: Date | null;
 
-    createdAt?: Date;
-    updatedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface IDoctorScheduleDocument extends IDoctorSchedule, Document {
-    _id: Types.ObjectId;
-    id: string;
+  _id: Types.ObjectId;
+  id: string;
 }
 
 export interface IAvailableSlot {
-    date: Date;
-    startTime: string;
-    endTime: string;
-    isAvailable: boolean;
-    bookedCount: number;
-    maxPatients: number;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  bookedCount: number;
+  maxPatients: number;
 }

@@ -11,8 +11,8 @@ import ForgotVerifyOtpPage from './Pages/Patients/ForgotVerifyOtp';
 import AdminLogin from './Pages/Admin/Login';
 import AdminDashboard from './Pages/Admin/Dashboard';
 import AdminPatients from './Pages/Admin/PatientList';
-import PublicRoute from './Route/PublicRoute';
-import ProtectedRoute from './Route/ProtectedRoute';
+import AdminAppointments from './Pages/Admin/AppoinmentAdmin';
+import RoleRoute from './Route/RoleRoute';
 import ResetPassword from './Pages/Patients/ResetPassword';
 import PatientProfile from './Pages/Patients/PatientProfile';
 import DoctorRegistration from './Pages/Doctor/RegistrationDoctor';
@@ -24,17 +24,22 @@ import DoctorVerification from './Pages/Admin/DoctorVerification';
 import DoctorRequestsList from './Pages/Admin/ReqeustedDoctorList';
 import ApprovedDoctorsListPage from './Pages/Admin/DoctorsList';
 import DoctorDetails from './Pages/Admin/Doctor';
-import DoctorProtectedRoute from './Route/DoctorProtectedRoute';
-import PatientRoute from './Route/PatientRoute';
 import DoctorProfilePage from './Pages/Doctor/DoctorProfile';
 import ManageSlots from './Pages/Doctor/Slot';
+import ClinicalRequests from './Pages/Doctor/AppointmentRequest';
+import ClinicalAppointments from './Pages/Doctor/AppointmentListPage';
 import Doctors from './Pages/Patients/Doctors';
+import PatientDoctorDetails from './Pages/Patients/DoctorDetailsPage';
+import BookAppointment from './Pages/Patients/AppointmentBookingPage';
 import DoctorForgotPassword from './Pages/Doctor/ForgotPassword';
 import DoctorForgotVerifyOtp from './Pages/Doctor/DoctorForgotVerifyOtp';
 import DoctorResetPassword from './Pages/Doctor/DoctorResetPassword';
+import AppointmentDetails from './Pages/Doctor/AppointmentDetailsPage';
+import ErrorPage from './Pages/Patients/404'
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setUser } from './redux/user/userSlice';
+import { setDoctor } from './redux/doctor/doctorSlice';
 import AuthService from './services/AuthService';
 
 const TokenHandler: React.FC = () => {
@@ -45,24 +50,37 @@ const TokenHandler: React.FC = () => {
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
         if (token) {
-            AuthService.saveToken(token);
-            const userInfo = AuthService.getCurrentUserInfo();
-            if (userInfo) {
-                dispatch(setUser(userInfo as any));
+            // To decode token we can just use AuthService.decodeToken if we make it public, or temporarily set it.
+            // Let's decode manually or temporarily set it to patientToken so getCurrentUserInfo can read it.
+            localStorage.setItem('patientToken', token);
+            const decodedInfo = AuthService.getCurrentUserInfo();
+            
+            if (decodedInfo) {
+                if (decodedInfo.role === 'doctor') {
+                    localStorage.setItem('doctorToken', token);
+                    localStorage.removeItem('patientToken');
+                    dispatch(setDoctor(decodedInfo as any));
+                } else if (decodedInfo.role === 'admin') {
+                    localStorage.setItem('adminToken', token);
+                    localStorage.removeItem('patientToken');
+                } else {
+                    dispatch(setUser(decodedInfo as any));
+                }
             }
+
             const url = new URL(window.location.href);
             url.searchParams.delete('token');
             url.searchParams.delete('user');
 
             if (window.location.pathname.includes('callback')) {
                 // After Google OAuth callback → go to correct dashboard
-                if (userInfo?.role === 'doctor') {
-                    if ((userInfo as any)?.verificationStatus?.toLowerCase() !== 'approved') {
+                if (decodedInfo?.role === 'doctor') {
+                    if ((decodedInfo as any)?.verificationStatus?.toLowerCase() !== 'approved') {
                         navigate(FRONTEND_ROUTES.DOCTOR_PENDING, { replace: true });
                     } else {
                         navigate(FRONTEND_ROUTES.DOCTOR_DASHBOARD, { replace: true });
                     }
-                } else if (userInfo?.role === 'admin') {
+                } else if (decodedInfo?.role === 'admin') {
                     navigate(FRONTEND_ROUTES.ADMIN_DASHBOARD, { replace: true });
                 } else {
                     navigate(FRONTEND_ROUTES.HOME, { replace: true });
@@ -82,50 +100,56 @@ const App: React.FC = () => {
             <TokenHandler />
             <Toaster position="top-right" richColors />
             <Routes>
-                <Route path={FRONTEND_ROUTES.HOME} element={<LandingPage />} />
-                <Route path={FRONTEND_ROUTES.DOCTORS} element={<PatientRoute><Doctors /></PatientRoute>} />
+                <Route path={FRONTEND_ROUTES.HOME} element={<RoleRoute allowedRoles={['patient', 'user']}><LandingPage /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTORS} element={<RoleRoute allowedRoles={['patient', 'user']}><Doctors /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_DETAILS} element={<RoleRoute allowedRoles={['patient', 'user']}><PatientDoctorDetails /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.APPOINTMENT_BOOKING} element={<RoleRoute allowedRoles={['patient', 'user']}><BookAppointment /></RoleRoute>} />
 
                 {/* Patient Auth Routes */}
-                <Route path={FRONTEND_ROUTES.REGISTER} element={<PublicRoute roleScope="user"><Registration /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.LOGIN} element={<PublicRoute roleScope="user"><Login /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.VERIFY_OTP} element={<PublicRoute roleScope="user"><VerifyOtp /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.RESET_PASSWORD_LOGGED_IN} element={<PatientRoute requireAuth><ResetPassword /></PatientRoute>} />
-                <Route path={FRONTEND_ROUTES.PATIENT_PROFILE} element={<PatientRoute requireAuth><PatientProfile /></PatientRoute>} />
+                <Route path={FRONTEND_ROUTES.REGISTER} element={<RoleRoute publicOnlyFor="patient"><Registration /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.LOGIN} element={<RoleRoute publicOnlyFor="patient"><Login /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.VERIFY_OTP} element={<RoleRoute publicOnlyFor="patient"><VerifyOtp /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.RESET_PASSWORD_LOGGED_IN} element={<RoleRoute allowedRoles={['patient', 'user']} requireAuth><ResetPassword /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.PATIENT_PROFILE} element={<RoleRoute allowedRoles={['patient', 'user']} requireAuth><PatientProfile /></RoleRoute>} />
 
                 {/* Forgot Password Flow */}
-                <Route path={FRONTEND_ROUTES.FORGOT_PASSWORD} element={<PublicRoute roleScope="user"><ForgotEmailPage /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.FORGOT_PASSWORD_OTP} element={<PublicRoute roleScope="user"><ForgotVerifyOtpPage /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.FORGOT_PASSWORD_RESET} element={<PublicRoute roleScope="user"><ForgotPassword /></PublicRoute>} />
+                <Route path={FRONTEND_ROUTES.FORGOT_PASSWORD} element={<RoleRoute publicOnlyFor="patient"><ForgotEmailPage /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.FORGOT_PASSWORD_OTP} element={<RoleRoute publicOnlyFor="patient"><ForgotVerifyOtpPage /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.FORGOT_PASSWORD_RESET} element={<RoleRoute publicOnlyFor="patient"><ForgotPassword /></RoleRoute>} />
 
                 {/* Doctor Auth Routes */}
-                <Route path={FRONTEND_ROUTES.DOCTOR_REGISTER} element={<PublicRoute roleScope="doctor"><DoctorRegistration /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.DOCTOR_LOGIN} element={<PublicRoute roleScope="doctor"><DoctorLogin /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.DOCTOR_DASHBOARD} element={<DoctorProtectedRoute><DoctorDashboard /></DoctorProtectedRoute>} />
-                <Route path={FRONTEND_ROUTES.DOCTOR_PROFILE} element={<DoctorProtectedRoute requireApproved={false}><DoctorProfilePage /></DoctorProtectedRoute>} />
-                <Route path={FRONTEND_ROUTES.DOCTOR_SLOTS} element={<DoctorProtectedRoute requireApproved={false}><ManageSlots /></DoctorProtectedRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_REGISTER} element={<RoleRoute publicOnlyFor="doctor"><DoctorRegistration /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_LOGIN} element={<RoleRoute publicOnlyFor="doctor"><DoctorLogin /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_DASHBOARD} element={<RoleRoute allowedRoles={['doctor']} requireAuth requireDoctorApproval><DoctorDashboard /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_REQUESTS} element={<RoleRoute allowedRoles={['doctor']} requireAuth requireDoctorApproval><ClinicalRequests /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_APPOINTMENTS} element={<RoleRoute allowedRoles={['doctor']} requireAuth requireDoctorApproval><ClinicalAppointments /></RoleRoute>} />
+                <Route path="/doctor/appointments/:appointmentId" element={<RoleRoute allowedRoles={['doctor']} requireAuth requireDoctorApproval><AppointmentDetails /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_PROFILE} element={<RoleRoute allowedRoles={['doctor']} requireAuth><DoctorProfilePage /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_SLOTS} element={<RoleRoute allowedRoles={['doctor']} requireAuth><ManageSlots /></RoleRoute>} />
                 <Route path={FRONTEND_ROUTES.DOCTOR_VERIFY_OTP} element={<DoctorOtp />} />
-                <Route path={FRONTEND_ROUTES.DOCTOR_PENDING} element={<DoctorProtectedRoute requireApproved={false}><PendingDoctorPage /></DoctorProtectedRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_PENDING} element={<RoleRoute allowedRoles={['doctor']} requireAuth><PendingDoctorPage /></RoleRoute>} />
 
                 {/* Doctor Forgot Password Flow */}
-                <Route path={FRONTEND_ROUTES.DOCTOR_FORGOT_PASSWORD} element={<PublicRoute roleScope="doctor"><DoctorForgotPassword /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.DOCTOR_FORGOT_PASSWORD_OTP} element={<PublicRoute roleScope="doctor"><DoctorForgotVerifyOtp /></PublicRoute>} />
-                <Route path={FRONTEND_ROUTES.DOCTOR_FORGOT_PASSWORD_RESET} element={<PublicRoute roleScope="doctor"><DoctorResetPassword /></PublicRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_FORGOT_PASSWORD} element={<RoleRoute publicOnlyFor="doctor"><DoctorForgotPassword /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_FORGOT_PASSWORD_OTP} element={<RoleRoute publicOnlyFor="doctor"><DoctorForgotVerifyOtp /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.DOCTOR_FORGOT_PASSWORD_RESET} element={<RoleRoute publicOnlyFor="doctor"><DoctorResetPassword /></RoleRoute>} />
 
                 {/* Admin Auth Routes */}
-                <Route path={FRONTEND_ROUTES.ADMIN_LOGIN} element={<PublicRoute roleScope="admin"><AdminLogin /></PublicRoute>} />
+                <Route path={FRONTEND_ROUTES.ADMIN_LOGIN} element={<RoleRoute publicOnlyFor="admin"><AdminLogin /></RoleRoute>} />
 
                 {/* Admin Protected Routes */}
-                <Route path={FRONTEND_ROUTES.ADMIN_DASHBOARD} element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
-                <Route path={FRONTEND_ROUTES.ADMIN_PATIENTS} element={<ProtectedRoute role="admin"><AdminPatients /></ProtectedRoute>} />
-                <Route path={FRONTEND_ROUTES.ADMIN_DOCTOR_REQUESTS} element={<ProtectedRoute role="admin"><DoctorRequestsList /></ProtectedRoute>} />
-                <Route path={FRONTEND_ROUTES.ADMIN_DOCTORS} element={<ProtectedRoute role="admin"><ApprovedDoctorsListPage /></ProtectedRoute>} />
-                <Route path="/admin/doctors/:id" element={<ProtectedRoute role="admin"><DoctorDetails /></ProtectedRoute>} />
-                <Route path="/admin/doctor-requests/:id" element={<ProtectedRoute role="admin"><DoctorVerification /></ProtectedRoute>} />
-                <Route path={FRONTEND_ROUTES.ADMIN_DOCTOR_VERIFICATION} element={<ProtectedRoute role="admin"><DoctorVerification /></ProtectedRoute>} />
-                <Route path="/admin/patients/:id" element={<ProtectedRoute role="admin"><AdminPatients /></ProtectedRoute>} />
+                <Route path={FRONTEND_ROUTES.ADMIN_DASHBOARD} element={<RoleRoute allowedRoles={['admin']} requireAuth><AdminDashboard /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.ADMIN_PATIENTS} element={<RoleRoute allowedRoles={['admin']} requireAuth><AdminPatients /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.ADMIN_APPOINTMENTS} element={<RoleRoute allowedRoles={['admin']} requireAuth><AdminAppointments /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.ADMIN_DOCTOR_REQUESTS} element={<RoleRoute allowedRoles={['admin']} requireAuth><DoctorRequestsList /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.ADMIN_DOCTORS} element={<RoleRoute allowedRoles={['admin']} requireAuth><ApprovedDoctorsListPage /></RoleRoute>} />
+                <Route path="/admin/doctors/:id" element={<RoleRoute allowedRoles={['admin']} requireAuth><DoctorDetails /></RoleRoute>} />
+                <Route path="/admin/doctor-requests/:id" element={<RoleRoute allowedRoles={['admin']} requireAuth><DoctorVerification /></RoleRoute>} />
+                <Route path={FRONTEND_ROUTES.ADMIN_DOCTOR_VERIFICATION} element={<RoleRoute allowedRoles={['admin']} requireAuth><DoctorVerification /></RoleRoute>} />
+                <Route path="/admin/patients/:id" element={<RoleRoute allowedRoles={['admin']} requireAuth><AdminPatients /></RoleRoute>} />
 
                 {/* Fallback to home for now */}
-                <Route path="*" element={<LandingPage />} />
+                <Route path="*" element={<ErrorPage />} />
             </Routes>
         </Router>
     );

@@ -93,7 +93,7 @@ const Navbar = ({ activePage }: NavbarProps) => {
 
       {/* Action buttons or User Profile */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        {currentUser ? (
+        {currentUser && currentUser.role === "patient" ? (
           <div style={{ position: "relative" }}>
             <Link 
                to={FRONTEND_ROUTES.PATIENT_PROFILE}

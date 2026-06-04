@@ -14,14 +14,29 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        const url = config.url || "";
+        let url = config.url || "";
         
-        // Check if it's an admin route
-        const isAdminRoute = url.startsWith("/admin") || url.includes("/admin/");
+        // Ensure /api/v1 prefix is present for relative/domain-root routes
+        if (url && !url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("api/v1") && !url.startsWith("/api/v1")) {
+            url = url.startsWith("/") ? `/api/v1${url}` : `/api/v1/${url}`;
+            config.url = url;
+        }
+
+        const isAdminRoute = url.includes("/admin");
+        const isDoctorRoute = url.includes("/doctor") || url.includes("/doctors");
+        const isPatientRoute = url.includes("/patients") || url.includes("/patient");
         
-        let token = isAdminRoute 
-            ? localStorage.getItem("adminToken") 
-            : localStorage.getItem("authToken");
+        let token: string | null;
+        if (isAdminRoute) {
+            token = localStorage.getItem("adminToken");
+        } else if (isDoctorRoute) {
+            token = localStorage.getItem("doctorToken") || localStorage.getItem("patientToken");
+        } else if (isPatientRoute) {
+            token = localStorage.getItem("patientToken") || localStorage.getItem("doctorToken");
+        } else {
+            // Default: try patient, then doctor, then admin
+            token = localStorage.getItem("patientToken") || localStorage.getItem("doctorToken") || localStorage.getItem("adminToken");
+        }
 
         // Clean up stringified null/undefined
         if (token === "null" || token === "undefined") {
@@ -71,8 +86,6 @@ axiosInstance.interceptors.response.use(
         if (error.response?.status === 401 && !originalRequest._retry) {
             console.warn('[Axios] 401 Unauthorized:', originalRequest.method?.toUpperCase(), originalRequest.url);
 
-            // Skip refresh for login / auth endpoints — pass their original error straight back
-            // so the UI can show the correct message (e.g. "Invalid credentials")
             const isLoginEndpoint = ['/auth/login', '/auth/doctor/login', '/auth/register',
                 '/auth/verify-otp', '/auth/forgot-password', '/auth/reset-password']
                 .some(path => originalRequest.url?.includes(path));
@@ -80,7 +93,6 @@ axiosInstance.interceptors.response.use(
                 return Promise.reject(error);
             }
 
-            // Avoid infinite loop if refresh token itself fails
             if (originalRequest.url?.includes('/refresh-token')) {
                 return Promise.reject(error);
             }
@@ -89,7 +101,7 @@ axiosInstance.interceptors.response.use(
 
             try {
                 console.log("[Axios] Attempting token refresh...");
-                const res = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
+                const res = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh-token`, {}, {
                     withCredentials: true,
                     headers: { "Content-Type": 'application/json' },
                 });
@@ -99,11 +111,16 @@ axiosInstance.interceptors.response.use(
                     throw new Error('No access token in refresh response');
                 }
 
-                const isAdminRoute = originalRequest.url?.startsWith("/admin") || originalRequest.url?.includes("/admin/");
+                const url = originalRequest.url || "";
+                const isAdminRoute = url.includes("/admin");
+                const isDoctorRoute = url.includes("/doctor") || url.includes("/doctors");
+
                 if (isAdminRoute) {
                     localStorage.setItem("adminToken", newToken);
+                } else if (isDoctorRoute) {
+                    localStorage.setItem("doctorToken", newToken);
                 } else {
-                    localStorage.setItem("authToken", newToken);
+                    localStorage.setItem("patientToken", newToken);
                 }
 
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -111,8 +128,8 @@ axiosInstance.interceptors.response.use(
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
                 console.error("[Axios] Refresh token failed:", refreshError);
-                // Clear tokens on hard refresh failure
-                localStorage.removeItem("authToken");
+                localStorage.removeItem("patientToken");
+                localStorage.removeItem("doctorToken");
                 localStorage.removeItem("adminToken");
                 return Promise.reject(refreshError);
             }
@@ -121,7 +138,8 @@ axiosInstance.interceptors.response.use(
         if (error.response?.status === 403) {
             console.error('[Axios] 403 Forbidden — account may be blocked:', originalRequest.url);
             // Clear all tokens so the user is fully logged out
-            localStorage.removeItem("authToken");
+            localStorage.removeItem("patientToken");
+            localStorage.removeItem("doctorToken");
             localStorage.removeItem("adminToken");
             // Fire a global event so any component (e.g. profile page) can react
             window.dispatchEvent(new CustomEvent("user:blocked"));

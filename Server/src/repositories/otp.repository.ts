@@ -1,39 +1,85 @@
-import OTPModel, { IOTPDocument } from "../models/otp.model";
-import { BaseRepository } from "./base.repository";
-import { IOTPRepository } from "./interface/IOtp.repository";
+import OTPModel, { IOTPDocument } from '../models/otp.model';
+import { BaseRepository } from './base.repository';
+import { IOTPRepository } from './interface/IOtp.repository';
+import { OTPUserData } from '../types/otp.type';
 
-export class OTPRepository extends BaseRepository<IOTPDocument> implements IOTPRepository {
-    constructor() {
-        super(OTPModel);
-    }
+export class OTPRepository
+  extends BaseRepository<IOTPDocument>
+  implements IOTPRepository
+{
+  constructor() {
+    super(OTPModel);
+  }
 
-    async findByEmailAndOtp(email: string, otp: string): Promise<IOTPDocument | null> {
-        return await this.model.findOne({ email, otp }).exec();
-    }
+  async findByEmailAndOtp(
+    email: string,
+    otp: string,
+  ): Promise<IOTPDocument | null> {
+    return await this.model.findOne({ email, otp }).exec();
+  }
 
-    async updateOtp(email: string, data: { otp: string|null; otpExpiresAt?: Date; expiresAt?: Date }): Promise<IOTPDocument | null> {
-        return await this.model.findOneAndUpdate({ email }, { $set: data }, { new: true }).exec();
-    }
+  async updateOtp(
+    email: string,
+    data: { otp: string | null; otpExpiresAt?: Date; expiresAt?: Date },
+  ): Promise<IOTPDocument | null> {
+    return await this.model
+      .findOneAndUpdate({ email }, { $set: data }, { new: true })
+      .exec();
+  }
 
-    async deleteByEmaill(email: string): Promise<void> {
-        await this.model.deleteOne({ email }).exec()
-    }
+  async deleteByEmaill(email: string): Promise<void> {
+    await this.model.deleteOne({ email }).exec();
+  }
 
-    async deleteExpired(): Promise<number> {
-        const result = await this.model.deleteMany({ expiresAt: { $lt: new Date() }}).exec();
-        return result.deletedCount || 0
-    }
+  async deleteExpired(): Promise<number> {
+    const result = await this.model
+      .deleteMany({ expiresAt: { $lt: new Date() } })
+      .exec();
+    return result.deletedCount || 0;
+  }
 
-    async isValid(email: string, otp: string): Promise<boolean> {
-        const record = await this.model.findOne({ email, otp, otpExpiresAt: { $gt: new Date() } });
-        return !!record
-    }
+  async isValid(email: string, otp: string): Promise<boolean> {
+    const record = await this.model.findOne({
+      email,
+      otp,
+      otpExpiresAt: { $gt: new Date() },
+    });
+    return !!record;
+  }
 
-    async findAll(): Promise<IOTPDocument[]> {
-        return await this.model.find().exec();
-    }
+  async findAll(): Promise<IOTPDocument[]> {
+    return await this.model.find().exec();
+  }
 
-    async count(): Promise<number> {
-        return await this.model.countDocuments().exec()
-    }
+  async count(): Promise<number> {
+    return await this.model.countDocuments().exec();
+  }
+
+  async createOrUpdateOtp(
+    email: string,
+    data: {
+      otp: string;
+      otpExpiresAt: Date;
+      expiresAt: Date;
+      userData: OTPUserData;
+    },
+  ): Promise<IOTPDocument | null> {
+    return await this.model.findOneAndUpdate(
+      { email },
+
+      {
+        $set: {
+          otp: data.otp,
+          otpExpiresAt: data.otpExpiresAt,
+          expiresAt: data.expiresAt,
+          userData: data.userData,
+        },
+      },
+
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+  }
 }

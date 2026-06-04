@@ -8,6 +8,7 @@ import { adminService } from "../../services/AdminService";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import { ChevronLeft, ChevronRight, Eye, Search, Check, ChevronDown, UserX, UserCheck, Filter, Download } from "lucide-react";
 import { theme as t } from "../../theme";
+import ConfirmModal from "../../components/Ui/ConfirmModal";
 
 interface Patient {
     id: string;
@@ -91,6 +92,23 @@ const PatientsListPage: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: "danger" | "warning" | "info";
+        onConfirm: () => void;
+        loading: boolean;
+    }>({
+        isOpen: false,
+        title: "",
+        message: "",
+        type: "info",
+        onConfirm: () => {},
+        loading: false
+    });
 
     const getInitials = (name?: string) => {
         if (!name) return "??";
@@ -133,26 +151,40 @@ const PatientsListPage: React.FC = () => {
         fetchPatients(page);
     }, [page, fetchPatients]);
 
-    const handleToggleStatus = async (patientId: string, currentStatus: boolean) => {
-        try {
-            let res;
-            if (currentStatus) {
-                res = await adminService.blockPatient(patientId);
-            } else {
-                res = await adminService.unblockPatient(patientId);
-            }
+    const handleToggleStatus = (patientId: string, currentStatus: boolean) => {
+        const action = currentStatus ? "block" : "unblock";
+        setConfirmModal({
+            isOpen: true,
+            title: `${action.charAt(0).toUpperCase() + action.slice(1)} Patient?`,
+            message: `Are you sure you want to ${action} this patient? They will ${currentStatus ? "lose" : "regain"} access to the clinical portal.`,
+            type: currentStatus ? "danger" : "warning",
+            loading: false,
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, loading: true }));
+                try {
+                    let res;
+                    if (currentStatus) {
+                        res = await adminService.blockPatient(patientId);
+                    } else {
+                        res = await adminService.unblockPatient(patientId);
+                    }
 
-            if (res?.success) {
-                toast.success(res.message || `Patient ${currentStatus ? 'blocked' : 'unblocked'} successfully`);
-                setPatients(prev => prev.map(p => 
-                    p.id === patientId ? { ...p, isActive: !currentStatus } : p
-                ));
-            } else {
-                toast.error(res?.message || `Failed to ${currentStatus ? 'block' : 'unblock'} patient`);
+                    if (res?.success) {
+                        toast.success(res.message || `Patient ${currentStatus ? 'blocked' : 'unblocked'} successfully`);
+                        setPatients(prev => prev.map(p => 
+                            p.id === patientId ? { ...p, isActive: !currentStatus } : p
+                        ));
+                        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                    } else {
+                        toast.error(res?.message || `Failed to ${currentStatus ? 'block' : 'unblock'} patient`);
+                    }
+                } catch {
+                    toast.error("An error occurred while updating patient status");
+                } finally {
+                    setConfirmModal(prev => ({ ...prev, loading: false }));
+                }
             }
-        } catch {
-            toast.error("An error occurred while updating patient status");
-        }
+        });
     };
 
     const pagesToShow = useMemo(() => {
@@ -527,7 +559,19 @@ const PatientsListPage: React.FC = () => {
                     .hidden.lg\\:block { display: none !important; }
                 }
                 body { margin: 0; padding: 0; }
+                .animate-spin { animation: spin 1s linear infinite; }
             `}</style>
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                isLoading={confirmModal.loading}
+                confirmText={confirmModal.title.split(" ")[0]}
+            />
         </div>
     );
 };

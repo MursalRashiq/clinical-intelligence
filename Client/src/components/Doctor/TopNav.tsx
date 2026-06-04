@@ -1,34 +1,46 @@
 import { useNavigate } from "react-router-dom";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import { useSelector } from "react-redux";
-import { selectCurrentUser } from "../../redux/user/userSlice";
+import { selectCurrentDoctor } from "../../redux/doctor/doctorSlice";
 import { useState, useEffect } from "react";
 import PatientService from "../../services/PatientService";
 
 export default function TopNav() {
   const navigate = useNavigate();
-  const currentUser = useSelector(selectCurrentUser);
+  const currentDoctor = useSelector(selectCurrentDoctor);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  const doctorName = currentUser?.name ? `Dr. ${currentUser.name}` : "Doctor";
-  const doctorSpecialty = (currentUser as any)?.specialty || "Clinical Specialist";
+  const doctorName = (currentDoctor?.role === 'doctor' && currentDoctor?.name) 
+    ? `Dr. ${currentDoctor.name}` 
+    : currentDoctor?.role === 'doctor' 
+      ? "Doctor" 
+      : "Guest";
+  const doctorSpecialty = (currentDoctor?.role === 'doctor' && (currentDoctor as any)?.specialty) || "Clinical Specialist";
 
   // Fetch presigned profile image URL from the user profile endpoint
   useEffect(() => {
-    PatientService.getProfile()
-      .then((res: any) => {
-        if (res?.success && res.data?.profileImage) {
-          setAvatarUrl(res.data.profileImage);
-        } else {
-          setAvatarUrl(null);
-        }
-      })
-      .catch(() => setAvatarUrl(null));
-  }, [currentUser?.profileImage]);
+    if (currentDoctor?.role !== 'doctor' && (currentDoctor as any)?.role) {
+        // If logged in as something else, or if role is wrong, we shouldn't be here
+        // The RoleRoute should handle this, but as an extra layer:
+        console.warn("Unauthorized access to doctor component");
+    }
+
+    if (currentDoctor?.role === 'doctor') {
+      PatientService.getProfile()
+        .then((res: any) => {
+          if (res?.success && res.data?.profileImage) {
+            setAvatarUrl(res.data.profileImage);
+          } else {
+            setAvatarUrl(null);
+          }
+        })
+        .catch(() => setAvatarUrl(null));
+    }
+  }, [currentDoctor?.profileImage, currentDoctor?.role]);
 
   // Generate initials-based default avatar
-  const initials = currentUser?.name
-    ? currentUser.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+  const initials = currentDoctor?.name
+    ? currentDoctor.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "DR";
   const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=1560e8&color=fff&size=64&bold=true`;
 

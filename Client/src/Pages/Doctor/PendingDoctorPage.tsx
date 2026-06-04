@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
   Clock,
-  FileText,
   ShieldCheck,
   UserCheck,
   LogOut,
   Edit3,
-  FolderOpen,
   Bell,
   ChevronRight,
   Activity,
@@ -25,7 +23,7 @@ import AuthService from "../../services/AuthService";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
-import { logout, updateUser } from "../../redux/user/userSlice";
+import { logoutDoctor, updateDoctor } from "../../redux/doctor/doctorSlice";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -62,6 +60,7 @@ const navItems: NavItem[] = [
 function Sidebar({ mobile, onClose, user, doctorProfile, onLogout }: { mobile?: boolean; onClose?: () => void; user: any; doctorProfile: any; onLogout: () => void }) {
   const navigate = useNavigate();
   const initials = user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : "DR";
+  const status = (doctorProfile?.verificationStatus || user?.verificationStatus)?.toLowerCase();
 
   return (
     <aside
@@ -110,7 +109,7 @@ function Sidebar({ mobile, onClose, user, doctorProfile, onLogout }: { mobile?: 
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-800 truncate">Dr. {user?.name || "Clinician"}</p>
-              {doctorProfile?.verificationStatus === "rejected" ? (
+              {status === "rejected" ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                   Rejected
@@ -297,8 +296,9 @@ export default function ApprovalPending() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const userInfo = AuthService.getCurrentUserInfo();
+    const userInfo = AuthService.getCurrentUserInfo("doctor");
     if (!userInfo) {
+      dispatch(logoutDoctor());
       navigate(FRONTEND_ROUTES.DOCTOR_LOGIN);
       return;
     }
@@ -311,13 +311,13 @@ export default function ApprovalPending() {
           setDoctorProfile(response.data);
           
           // Update Redux state with latest status
-          dispatch(updateUser({
+          dispatch(updateDoctor({
             verificationStatus: response.data.verificationStatus,
             rejectionReason: response.data.rejectionReason
           }));
 
           // If approved, redirect to dashboard
-          if (response.data.verificationStatus === "approved") {
+          if (response.data.verificationStatus?.toLowerCase() === "approved") {
             navigate(FRONTEND_ROUTES.DOCTOR_DASHBOARD);
           }
         }
@@ -355,7 +355,7 @@ export default function ApprovalPending() {
     },
   ];
 
-  const status = doctorProfile?.verificationStatus?.toLowerCase();
+  const status = (doctorProfile?.verificationStatus || user?.verificationStatus)?.toLowerCase();
   const dynamicTimeline: TimelineStep[] = [
     { 
       label: "Account Created", 
@@ -399,8 +399,8 @@ export default function ApprovalPending() {
 
   const handleLogout = async () => {
     try {
-      await AuthService.logout();
-      dispatch(logout());
+      await AuthService.logout("doctor");
+      dispatch(logoutDoctor());
       toast.success("Logged out successfully");
       navigate(FRONTEND_ROUTES.DOCTOR_LOGIN);
     } catch (error) {
@@ -423,9 +423,9 @@ export default function ApprovalPending() {
         toast.success("Application resubmitted successfully!");
         setDoctorProfile(response.data);
         // Dispatch update to redux if needed
-        dispatch(updateUser({
+        dispatch(updateDoctor({
           verificationStatus: response.data.verificationStatus,
-          rejectionReason: null
+          rejectionReason: undefined
         }));
       } else {
         toast.error(response.message || "Failed to resubmit application");
@@ -631,12 +631,12 @@ export default function ApprovalPending() {
               </div>
 
               {/* Info banner */}
-              <div className={`border-t border-slate-100 ${doctorProfile?.verificationStatus === "rejected" ? "bg-red-50/50" : "bg-blue-50/50"} px-8 py-4 flex items-center gap-3`}>
-                <div className={`w-7 h-7 rounded-lg ${doctorProfile?.verificationStatus === "rejected" ? "bg-red-100" : "bg-blue-100"} flex items-center justify-center shrink-0`}>
-                  {doctorProfile?.verificationStatus === "rejected" ? <X size={15} className="text-red-600" /> : <Award size={15} className="text-blue-600" />}
+              <div className={`border-t border-slate-100 ${status === "rejected" ? "bg-red-50/50" : "bg-blue-50/50"} px-8 py-4 flex items-center gap-3`}>
+                <div className={`w-7 h-7 rounded-lg ${status === "rejected" ? "bg-red-100" : "bg-blue-100"} flex items-center justify-center shrink-0`}>
+                  {status === "rejected" ? <X size={15} className="text-red-600" /> : <Award size={15} className="text-blue-600" />}
                 </div>
                 <p className="text-sm text-slate-600">
-                  {doctorProfile?.verificationStatus === "rejected" ? (
+                  {status === "rejected" ? (
                     <span className="font-semibold text-slate-800">Your application requires changes. Please address the feedback above.</span>
                   ) : (
                     <>

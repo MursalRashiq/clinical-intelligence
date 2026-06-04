@@ -1,109 +1,111 @@
-import { validateEmail } from "../utils/validation.util";
-import { ValidationError } from "../errors/AppError";
+import { validateEmail } from '../utils/validation.util';
+import { ValidationError } from '../errors/AppError';
 import type {
-    RegisterDTO,
-    LoginDTO,
-    VerifyOtpDTO,
-    ResendOtpDTO,
-    ForgotPasswordDTO,
-    ResetPasswordDTO,
-    ForgotPasswordVerifyOtpDTO
-} from "../dtos/common.dto";
-import { MESSAGES, GENDER } from "../constants/constants";
+  RegisterDTO,
+  LoginDTO,
+  VerifyOtpDTO,
+  ResendOtpDTO,
+  ForgotPasswordDTO,
+  ResetPasswordDTO,
+  ForgotPasswordVerifyOtpDTO,
+} from '../dtos/common.dto';
+import { MESSAGES, GENDER } from '../constants/constants';
 
 export class AuthValidator {
-    static validateRegisterInput(data: RegisterDTO): void {
-        if (!validateEmail(data.email)) {
-            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-        }
-
-        if (data.phone) {
-            const phoneDigits = data.phone.replace(/\D/g, "");
-            if (phoneDigits.length < 10 || phoneDigits.length > 15) {
-                throw new ValidationError(MESSAGES.INVALID_PHONE_NUMBER);
-            }
-            const last10 = phoneDigits.slice(-10);
-            if (/^(\d)\1{9}$/.test(last10)) {
-                throw new ValidationError("Phone number cannot be all the same digit");
-            }
-        }
-
-        if (!data.name || data.name.trim().length < 2) {
-            throw new ValidationError(MESSAGES.INVALID_NAME);
-        }
-
-        if (data.gender) {
-            const validGenders: string[] = Object.values(GENDER);
-            if (!validGenders.includes(String(data.gender).toLowerCase())) {
-                throw new ValidationError(MESSAGES.INVALID_GENDER);
-            }
-        }
-
-        if (!data.password || !/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(data.password)) {
-            throw new ValidationError(MESSAGES.PASSWORD_TOO_WEAK);
-        }
-
-        if (data.password !== data.confirmPassword) {
-            throw new ValidationError(MESSAGES.PASSWORDS_NOT_MATCH);
-        }
+  static validateRegisterInput(data: RegisterDTO): void {
+    if (!validateEmail(data.email)) {
+      throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
     }
 
-    static validateLoginInput(data: LoginDTO): void {
-        if (!validateEmail(data.email)) {
-            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-        }
-
-        if (!data.password || data.password.length < 1) {
-            throw new ValidationError("Password is required");
-        }
+    if (data.phone) {
+      const phoneDigits = data.phone.replace(/\D/g, '');
+      if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+        throw new ValidationError(MESSAGES.INVALID_PHONE_NUMBER);
+      }
+      const last10 = phoneDigits.slice(-10);
+      if (/^(\d)\1{9}$/.test(last10)) {
+        throw new ValidationError('Phone number cannot be all the same digit');
+      }
     }
 
-    static validateVerifyOtpInput(data: VerifyOtpDTO): void {
-        if (!validateEmail(data.email)) {
-            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-        }
-        if (!data.otp || data.otp.trim().length === 0) {
-            throw new ValidationError(MESSAGES.MISSING_FIELDS);
-        }
+    if (!data.name || data.name.trim().length < 2) {
+      throw new ValidationError(MESSAGES.INVALID_NAME);
     }
 
-    static validateResendOtpInput(data: ResendOtpDTO): void {
-        if (!validateEmail(data.email)) {
-            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-        }
+    if (data.gender) {
+      const validGenders: string[] = Object.values(GENDER);
+      if (!validGenders.includes(String(data.gender).toLowerCase())) {
+        throw new ValidationError(MESSAGES.INVALID_GENDER);
+      }
     }
 
-    static validateForgotPasswordInput(data: ForgotPasswordDTO): void {
-        if (!validateEmail(data.email)) {
-            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-        }
+    if (!data.password || !/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(data.password)) {
+      throw new ValidationError(MESSAGES.PASSWORD_TOO_WEAK);
     }
 
-    static validateForgotPasswordVerifyOtpInput(data: ForgotPasswordVerifyOtpDTO): void {
-        if (!validateEmail(data.email)) {
-            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-        }
-        if (!data.otp || data.otp.trim().length === 0) {
-            throw new ValidationError(MESSAGES.MISSING_FIELDS);
-        }
+    if (data.password !== data.confirmPassword) {
+      throw new ValidationError(MESSAGES.PASSWORDS_NOT_MATCH);
+    }
+  }
+
+  static validateLoginInput(data: LoginDTO): void {
+    if (!validateEmail(data.email)) {
+      throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
     }
 
-    static validateResetPasswordInput(data: ResetPasswordDTO): void {
-        if (!validateEmail(data.email)) {
-            throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
-        }
-        if (!data.resetToken) {
-            throw new ValidationError(MESSAGES.RESET_TOKEN_INVALID);
-        }
-        if (!data.newPassword || !data.confirmNewPassword) {
-            throw new ValidationError(MESSAGES.MISSING_FIELDS);
-        }
-        // Strong password check
-        if (!/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(data.newPassword)) {
-            throw new ValidationError(MESSAGES.PASSWORD_TOO_WEAK);
-        }
-        if (data.newPassword !== data.confirmNewPassword) {
-            throw new ValidationError(MESSAGES.PASSWORDS_NOT_MATCH);
-        }
+    if (!data.password || data.password.length < 1) {
+      throw new ValidationError('Password is required');
     }
+  }
+
+  static validateVerifyOtpInput(data: VerifyOtpDTO): void {
+    if (!validateEmail(data.email)) {
+      throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
+    }
+    if (!data.otp || data.otp.trim().length === 0) {
+      throw new ValidationError(MESSAGES.MISSING_FIELDS);
+    }
+  }
+
+  static validateResendOtpInput(data: ResendOtpDTO): void {
+    if (!validateEmail(data.email)) {
+      throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
+    }
+  }
+
+  static validateForgotPasswordInput(data: ForgotPasswordDTO): void {
+    if (!validateEmail(data.email)) {
+      throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
+    }
+  }
+
+  static validateForgotPasswordVerifyOtpInput(
+    data: ForgotPasswordVerifyOtpDTO,
+  ): void {
+    if (!validateEmail(data.email)) {
+      throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
+    }
+    if (!data.otp || data.otp.trim().length === 0) {
+      throw new ValidationError(MESSAGES.MISSING_FIELDS);
+    }
+  }
+
+  static validateResetPasswordInput(data: ResetPasswordDTO): void {
+    if (!validateEmail(data.email)) {
+      throw new ValidationError(MESSAGES.INVALID_EMAIL_FORMAT);
+    }
+    if (!data.resetToken) {
+      throw new ValidationError(MESSAGES.RESET_TOKEN_INVALID);
+    }
+    if (!data.newPassword || !data.confirmNewPassword) {
+      throw new ValidationError(MESSAGES.MISSING_FIELDS);
+    }
+    // Strong password check
+    if (!/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(data.newPassword)) {
+      throw new ValidationError(MESSAGES.PASSWORD_TOO_WEAK);
+    }
+    if (data.newPassword !== data.confirmNewPassword) {
+      throw new ValidationError(MESSAGES.PASSWORDS_NOT_MATCH);
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { selectCurrentUser, logout, updateUser } from "../../redux/user/userSlice";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from "../../utils/cropImage";
@@ -9,6 +9,8 @@ import PatientService from "../../services/PatientService";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import AppointmentsPage from "./AppointmentPage";
+import ConfirmModal from "../../components/Ui/ConfirmModal";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface NavItem {
@@ -217,11 +219,18 @@ export default function ProfilePage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = async () => {
-    await AuthService.logout();
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    // Navigate immediately — don't await the server call
     dispatch(logout());
-    navigate(FRONTEND_ROUTES.LOGIN);
+    navigate(FRONTEND_ROUTES.LOGIN, { replace: true });
+    // Fire-and-forget: tell the server to clear the refresh cookie
+    AuthService.logout().catch(() => {});
   };
 
   // If the server reports the account is blocked (403), log out immediately
@@ -234,6 +243,17 @@ export default function ProfilePage() {
     return () => window.removeEventListener("user:blocked", handleBlocked);
   }, [dispatch, navigate]);
 
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    if (location.state && (location.state as any).activeTab) {
+      return (location.state as any).activeTab;
+    }
+    const params = new URLSearchParams(location.search);
+    if (params.get("tab")) {
+      return params.get("tab")!;
+    }
+    return "Profile";
+  });
   const [avatar, setAvatar] = useState<string | null>(null);
   const [editingPersonal, setEditingPersonal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(false);
@@ -445,13 +465,13 @@ export default function ProfilePage() {
 
   const navItems: NavItem[] = [
     { label: "Dashboard", icon: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z", href: "/dashboard" },
-    { label: "My Appointments", icon: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01", href: "/appointments" },
+    { label: "My Appointments", icon: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01", action: () => setActiveTab("My Appointments"), active: activeTab === "My Appointments" },
     { label: "Wallet", icon: "M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7M16 2v4M8 2v4M3 10h18M22 19l-3 3-1.5-1.5", href: "/wallet" },
     { label: "Invoices", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8", href: "/invoices" },
     { label: "Message", icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", href: "/messages", badge: 1 },
     { label: "Settings", icon: "M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 8v4l3 3", href: "/settings" },
     { label: "Change Password", icon: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4", href: FRONTEND_ROUTES.RESET_PASSWORD_LOGGED_IN },
-    { label: "Profile", icon: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z", href: "/profile", active: true },
+    { label: "Profile", icon: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z", action: () => setActiveTab("Profile"), active: activeTab === "Profile" },
     { label: "Logout", icon: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9", action: handleLogout },
   ];
 
@@ -674,6 +694,7 @@ export default function ProfilePage() {
         {/* ── Content ── */}
         <div className="content" style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
 
+          {activeTab === "Profile" ? (<>
           {/* Tab */}
           <div style={{ animation: "fade-up .4s ease both" }}>
             <div style={{
@@ -701,7 +722,6 @@ export default function ProfilePage() {
               title="Personal Information"
               lastUpdated="24/10/2023"
               onEdit={() => { setDraft(profile); setEditingPersonal(true); }}
-              onDelete={() => setShowDeleteModal(true)}
             />
 
             {/* Photo row */}
@@ -861,7 +881,7 @@ export default function ProfilePage() {
                 <InfoField label="Pincode" value={profile.pincode} editing={false} name="pincode" onChange={() => { }} />
               </div>
             </div>
-          </div>
+          </div></> ) : activeTab === "My Appointments" ? <AppointmentsPage /> : null}
 
         </div>
       </div>
@@ -999,6 +1019,20 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Logout Confirm Modal ── */}
+      {showLogoutConfirm && (
+        <ConfirmModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={confirmLogout}
+          title="Logout"
+          message="Are you sure you want to log out from your account?"
+          confirmText="Logout"
+          cancelText="Cancel"
+          type="warning"
+        />
       )}
 
       {/* ── Toast ── */}

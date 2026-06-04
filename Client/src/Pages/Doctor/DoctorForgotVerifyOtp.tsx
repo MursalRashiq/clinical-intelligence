@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { FRONTEND_ROUTES } from "../../utils/constants";
 import AuthService from "../../services/AuthService";
@@ -147,7 +147,7 @@ export default function DoctorForgotVerifyOtp() {
           {digits.map((digit, idx) => (
             <input
               key={idx}
-              ref={el => inputRefs.current[idx] = el}
+              ref={el => { inputRefs.current[idx] = el; }}
               type="text"
               inputMode="numeric"
               maxLength={1}

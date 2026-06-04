@@ -26,16 +26,18 @@ const createWebStorage = () => {
 const storage = createWebStorage();
 import userReducer from './user/userSlice';
 import adminReducer from './admin/adminSlice';
+import doctorReducer from './doctor/doctorSlice';
 
 const persistConfig = {
     key: 'root',
     storage,
-    whitelist: ['user', 'admin'], // Persist both user and admin state
+    whitelist: ['user', 'admin', 'doctor'], // Persist user, admin, and doctor states
 };
 
 const rootReducer = combineReducers({
     user: userReducer,
     admin: adminReducer,
+    doctor: doctorReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

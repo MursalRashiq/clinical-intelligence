@@ -1,35 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import doctorService from "../../services/DoctorService";
-import { theme as t } from "../../theme";
 import { FRONTEND_ROUTES } from "../../utils/constants";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import patientService from "../../services/PatientService";
+import type { Doctor } from "../../types/user.type";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-interface Doctor {
-  id: string;
-  name: string;
-  specialty: string;
-  location: string;
-  duration: string;
-  fee: number;
-  rating: number;
-  available: boolean;
-  photo: string;
-  specialtyColor: { bg: string; color: string };
-  animDelay: string;
-  emoji: string;
-}
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
 
 // SVG Icons
-const HeartbeatIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 20, height: 20 }}>
-    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-  </svg>
-);
+
 
 const SearchIcon = ({ size = 18 }: { size?: number }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: size, height: size, flexShrink: 0 }}>
@@ -68,25 +48,37 @@ const getLocalDateString = (d: Date = new Date()) => {
 // ─── DoctorCard ──────────────────────────────────────────────────────────────
 function DoctorCard({ doc, onBook }: { doc: Doctor; onBook: (id: string, name: string) => void }) {
   const [imgOk, setImgOk] = useState(true);
-  const [todaySlots, setTodaySlots] = useState<{startTime: string, endTime: string}[] | null>(null);
+  const [todaySlots, setTodaySlots] = useState<{ startTime: string, endTime: string }[] | null>(null);
 
-  useEffect(() => {
-    if (!doc.id) return;
-    const fetchTodaySlots = async () => {
-      try {
-        const todayStr = getLocalDateString();
-        const res = await doctorService.getAvailableSlots(doc.id, todayStr);
-        if (res?.success && Array.isArray(res.data)) {
-          setTodaySlots(res.data);
-        } else {
+    useEffect(() => {
+      if (!doc.id) return;
+      const fetchTodaySlots = async () => {
+        try {
+          const todayStr = getLocalDateString();
+          const res = await doctorService.getAvailableSlots(doc.id, todayStr);
+          let slotsData = [];
+          if (Array.isArray(res)) slotsData = res;
+          else if (res && Array.isArray(res.data)) slotsData = res.data;
+          else if (res && res.data && Array.isArray(res.data.data)) slotsData = res.data.data;
+          else if (res && res.data && Array.isArray(res.data.availableSlots)) slotsData = res.data.availableSlots;
+          else if (res && Array.isArray(res.slots)) slotsData = res.slots;
+          else if (res && Array.isArray(res.availableSlots)) slotsData = res.availableSlots;
+          
+          if (slotsData.length > 0) {
+            const available = slotsData.filter((s: any) => s.isAvailable !== false);
+            console.log("Extracted slots for doctor", doc.id, ":", available);
+            setTodaySlots(available);
+          } else {
+            console.log("No slots found for doctor", doc.id);
+            setTodaySlots([]);
+          }
+        } catch (err) {
+          console.error("Error fetching slots for doctor", doc.id, err);
           setTodaySlots([]);
         }
-      } catch (err) {
-        setTodaySlots([]);
-      }
-    };
-    fetchTodaySlots();
-  }, [doc.id]);
+      };
+      fetchTodaySlots();
+    }, [doc.id]);
 
   return (
     <div className="doc-card" style={{ animationDelay: doc.animDelay }}>
@@ -119,7 +111,7 @@ function DoctorCard({ doc, onBook }: { doc: Doctor; onBook: (id: string, name: s
           <div className="doc-meta-row">
             <ClockIcon />{doc.duration}
           </div>
-          
+
           {todaySlots !== null && (
             <div className="doc-meta-row" style={{ marginTop: 4, alignItems: "flex-start" }}>
               <div style={{ marginTop: 2 }}><CalIcon /></div>
@@ -163,6 +155,13 @@ function DoctorCard({ doc, onBook }: { doc: Doctor; onBook: (id: string, name: s
   );
 }
 
+function convertTo12h(t: string) {
+  if (!t) return t;
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  return `${h % 12 || 12}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
 // ─── BookModal ────────────────────────────────────────────────────────────────
 function BookModal({ doctorId, docName, onClose }: { doctorId: string; docName: string; onClose: () => void }) {
   const [confirmed, setConfirmed] = useState(false);
@@ -174,13 +173,19 @@ function BookModal({ doctorId, docName, onClose }: { doctorId: string; docName: 
 
   const today = getLocalDateString();
 
-  useEffect(() => {
-    // Fetch doctor's overall schedule to determine active days
+ useEffect(() => {
+    //Fetch doctor's overall schedule to determine active days
     const fetchActiveDays = async () => {
       try {
-        const res = await doctorService.getSchedule(doctorId);
-        if (res?.data?.weeklySchedule) {
-          const days = res.data.weeklySchedule
+       const res = await doctorService.getSchedule(doctorId);
+       console.log("Fetching active days", res)
+        let scheduleData = null;
+        if (res && res.weeklySchedule) scheduleData = res;
+        else if (res && res.data && res.data.weeklySchedule) scheduleData = res.data;
+        else if (res && res.data && res.data.data && res.data.data.weeklySchedule) scheduleData = res.data.data;
+        
+        if (scheduleData && scheduleData.weeklySchedule) {
+          const days = scheduleData.weeklySchedule
             .filter((d: any) => d.slots?.length > 0 && d.enabled)
             .map((d: any) => d.day);
           setActiveDays(days);
@@ -197,14 +202,18 @@ function BookModal({ doctorId, docName, onClose }: { doctorId: string; docName: 
       setSlots([]);
       return;
     }
+
     const fetchSlots = async () => {
       setLoadingSlots(true);
       try {
-        const res = await doctorService.getAvailableSlots(doctorId, date);
+         const res = await doctorService.getAvailableSlots(doctorId, date);
+         console.log("Available slots fetched for date", date, res);
         if (res?.success && Array.isArray(res.data)) {
-          setSlots(res.data);
-          if (res.data.length > 0) {
-            setSelectedSlot(`${res.data[0].startTime} - ${res.data[0].endTime}`);
+          // Only show slots that are actually available (not booked)
+          const available = res.data.filter((s: any) => s.isAvailable !== false);
+          setSlots(available);
+          if (available.length > 0) {
+            setSelectedSlot(`${available[0].startTime} - ${available[0].endTime}`);
           } else {
             setSelectedSlot("");
           }
@@ -220,6 +229,7 @@ function BookModal({ doctorId, docName, onClose }: { doctorId: string; docName: 
     };
     fetchSlots();
   }, [date, doctorId]);
+  console.log(slots, "Available slots for selected date", date)
 
   function confirm() {
     if (!date || !selectedSlot) return;
@@ -245,6 +255,7 @@ function BookModal({ doctorId, docName, onClose }: { doctorId: string; docName: 
           </div>
           <div className="mf">
             <label>Time Slot</label>
+            console.log("Rendering slots",  loadingSlots, slots, selectedSlot)
             <select disabled={loadingSlots || slots.length === 0} value={selectedSlot} onChange={(e) => setSelectedSlot(e.target.value)}>
               {loadingSlots ? (
                 <option value="">Loading slots...</option>
@@ -252,8 +263,9 @@ function BookModal({ doctorId, docName, onClose }: { doctorId: string; docName: 
                 <option value="">No slots available</option>
               ) : (
                 slots.map(s => {
-                  const timeStr = `${s.startTime} - ${s.endTime}`;
-                  return <option key={timeStr} value={timeStr}>{timeStr}</option>;
+                  const valStr = `${s.startTime} - ${s.endTime}`;
+                  const uiStr = `${convertTo12h(s.startTime)} - ${convertTo12h(s.endTime)}`;
+                  return <option key={valStr} value={valStr}>{uiStr}</option>;
                 })
               )}
             </select>
@@ -289,8 +301,9 @@ function BookModal({ doctorId, docName, onClose }: { doctorId: string; docName: 
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component ─────────────────────────────────────────────────────────   
 export default function TakeCareDoctors() {
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookDoc, setBookDoc] = useState<{ id: string, name: string } | null>(null);
@@ -298,33 +311,72 @@ export default function TakeCareDoctors() {
   const [loadCount, setLoadCount] = useState(0);
   const [fetchingMore, setFetchingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [showAvailableOnly, setShowAvailableOnly] = useState(true);
+  const [sortOption, setSortOption] = useState("rating"); 
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [filterSpecialty, setFilterSpecialty] = useState("");
+  const [minRating, setMinRating] = useState(0);
+  const [page, setPage] = useState(1);
 
+  // Debounce search query
   useEffect(() => {
-    fetchDoctors();
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [searchQuery]);
 
-  const fetchDoctors = async () => {
-    setLoading(true);
-    const res = await doctorService.getAllDoctors({ search: searchQuery, hasSlots: true });
+  useEffect(() => {
+    setPage(1);
+    fetchDoctors(1, false);
+  }, [
+     debouncedSearchQuery,
+     showAvailableOnly,
+     filterSpecialty,
+     minRating,
+     sortOption,
+     sortOrder
+    ]);
+
+  const fetchDoctors = async (pageToFetch = 1, append = false) => {
+    if (!append) setLoading(true);
+    const res = await patientService.getAllDoctors({
+      search: debouncedSearchQuery,
+      hasSlots: showAvailableOnly,
+      specialty: filterSpecialty,
+      minRating,
+      sortBy: sortOption,
+      sortOrder,
+      page: pageToFetch,
+      limit: 3
+    });
     if (res.success && res.data) {
-      const mapped = res.data.doctors.map((d: any, idx: number) => ({
-        id: d._id,
-        name: `Dr. ${d.userId?.name || "Unknown"}`,
-        specialty: d.specialty || "General Specialist",
-        location: "Clinic Location", // Hardcoded for now
-        duration: "30 Min Consultation",
-        fee: d.VideoFees || 500,
-        rating: d.ratingAvg || 4.5,
-        available: d.isActive,
-        photo: d.userId?.profileImage || "",
-        specialtyColor: getSpecialtyColor(d.specialty),
+      console.log("Doctors fetched successfully:", res.data); 
+      const mapped = res.data.items.map((d: any, idx: number) => ({
+        id: d.id,
+        name: `Dr. ${d.name}`,
+        specialty: d.speciality || "General",
+        location: d.location || "Virtual / Online",
+        duration: `${d.experience || 0} Years Experience`,
+        fee: d.fees || 500,
+        rating: d.rating || 4.5,
+        available: d.available,
+        photo: d.image || "",
+        specialtyColor: getSpecialtyColor(d.speciality),
         animDelay: `${(idx * 0.03).toFixed(2)}s`,
         emoji: "👨‍⚕️"
       }));
-      setDoctors(mapped);
-      setLoadCount(res.data.total - mapped.length);
+      setDoctors(prev => {
+        const newDocs = append ? [...prev, ...mapped] : mapped;
+        setLoadCount(Math.max(0, res.data.total - newDocs.length));
+        return newDocs;
+      });
     }
-    setLoading(false);
+    if (!append) setLoading(false);
   };
 
   const getSpecialtyColor = (spec: string) => {
@@ -336,9 +388,13 @@ export default function TakeCareDoctors() {
     return { bg: "#f3f4f6", color: "#374151" };
   };
 
-  function loadMore() {
+  async function loadMore() {
+    if (fetchingMore) return;
     setFetchingMore(true);
-    setTimeout(() => { setFetchingMore(false); }, 1200);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    await fetchDoctors(nextPage, true);
+    setFetchingMore(false);
   }
 
   return (
@@ -521,9 +577,9 @@ export default function TakeCareDoctors() {
             <SearchIcon />
             <div style={{ flex: 1 }}>
               <span className="sb-label">Doctor / Specialty</span>
-              <input 
-                type="text" 
-                placeholder="Search doctors, specialties, clinics…" 
+              <input
+                type="text"
+                placeholder="Search doctors, specialties, clinics…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -567,12 +623,90 @@ export default function TakeCareDoctors() {
               <div className="results-sub">Based on your filters and location</div>
             </div>
             <div className="results-actions">
+               <div
+                 style={{
+                   display: "flex",
+                   alignItems: "center",
+                   gap: 10,
+                   background: "white",
+                   padding: "6px 14px",
+                   borderRadius: 10,
+                   border: "1.5px solid var(--border)",
+                   cursor: "pointer",
+                   marginRight: 8
+                 }}
+                 onClick={() => setShowAvailableOnly(!showAvailableOnly)}
+               >
+                 <div
+                   style={{
+                     width: 32,
+                     height: 18,
+                     background: showAvailableOnly ? "var(--blue)" : "#e2e8f0",
+                     borderRadius: 20,
+                     position: "relative",
+                     transition: "all .3s"
+                   }}
+                 >
+                   <div
+                     style={{
+                       width: 14,
+                       height: 14,
+                       background: "white",
+                       borderRadius: "50%",
+                       position: "absolute",
+                       top: 2,
+                       left: showAvailableOnly ? 16 : 2,
+                       transition: "all .3s"
+                     }}
+                   />
+                 </div>
+                 <span style={{ fontSize: 13, fontWeight: 600, color: showAvailableOnly ? "var(--blue)" : "var(--sub)" }}>Available Only</span>
+               </div>
+               <div style={{ display: "flex", alignItems: "center", gap: 12, marginRight: 8 }}>
+                 <select
+                   value={filterSpecialty}
+                   onChange={e => setFilterSpecialty(e.target.value)}
+                   style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", fontSize: 13, background: "white" }}
+                 >
+                   <option value="">All Specialties</option>
+                   {Array.from(new Set(doctors.map(d => d.specialty))).map(spec => (
+                     <option key={spec} value={spec}>{spec}</option>
+                   ))}
+                 </select>
+                 <select
+                   value={minRating}
+                   onChange={e => setMinRating(Number(e.target.value))}
+                   style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", fontSize: 13, background: "white" }}
+                 >
+                   <option value={0}>All Ratings</option>
+                   {[5,4,3,2,1].map(r => (
+                     <option key={r} value={r}>≥ {r}★</option>
+                   ))}
+                 </select>
+                 <select
+                   value={sortOption}
+                   onChange={e => setSortOption(e.target.value)}
+                   style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", fontSize: 13, background: "white" }}
+                 >
+                   <option value="rating">Rating</option>
+                   <option value="fee">Fee</option>
+                   <option value="name">Name</option>
+                 </select>
+                 <select
+                   value={sortOrder}
+                   onChange={e => setSortOrder(e.target.value as "asc" | "desc")}
+                   style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", fontSize: 13, background: "white" }}
+                 >
+                   <option value="desc">Desc</option>
+                   <option value="asc">Asc</option>
+                 </select>
+               </div>
               <div className="view-toggle">
                 <button className={`vt-btn${gridView ? " active" : ""}`} onClick={() => setGridView(true)}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
                 </button>
                 <button className={`vt-btn${!gridView ? " active" : ""}`} onClick={() => setGridView(false)}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
                 </button>
               </div>
             </div>
@@ -591,7 +725,7 @@ export default function TakeCareDoctors() {
           ) : (
             <div className="doctors-grid">
               {doctors.map(doc => (
-                <DoctorCard key={doc.id} doc={doc} onBook={(id, name) => setBookDoc({ id, name })} />
+                <DoctorCard key={doc.id} doc={doc} onBook={(id) => navigate(`/doctors/${id}`)} />
               ))}
             </div>
           )}

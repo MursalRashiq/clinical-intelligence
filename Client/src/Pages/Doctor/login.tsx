@@ -1,10 +1,11 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "sonner";
 import AuthService from "../../services/AuthService";
-import { DOCTOR_API_ROUTES, FRONTEND_ROUTES, USER_ROLES } from "../../utils/constants";
+import { FRONTEND_ROUTES, USER_ROLES } from "../../utils/constants";
 import { useDispatch } from "react-redux";
-import { setUser } from "../../redux/user/userSlice";
+import { setDoctor } from "../../redux/doctor/doctorSlice";
 
 const gradientStyle = {
     background: "linear-gradient(135deg, #0A2D78 0%, #1560E8 50%, #1A8FD1 100%)",
@@ -54,11 +55,11 @@ export default function DoctorLogin() {
                 
                 // Update global state
                 const user = response.data?.user || response.data;
-                dispatch(setUser(user));
+                dispatch(setDoctor(user));
                 
-                const userStatus = user?.verificationStatus;
+                const userStatus = user?.verificationStatus?.toLowerCase();
                 
-                if (userStatus === 'Pending') {
+                if (userStatus === 'pending' || userStatus === 'rejected') {
                     navigate(FRONTEND_ROUTES.DOCTOR_PENDING);
                 } else {
                     navigate(FRONTEND_ROUTES.DOCTOR_DASHBOARD);
@@ -74,10 +75,6 @@ export default function DoctorLogin() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleGoogleLogin = () => {
-        AuthService.userGoogleLogin();
     };
 
     return (

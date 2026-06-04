@@ -21,6 +21,7 @@ import {
     Stethoscope,
 } from "lucide-react";
 import { theme as t } from "../../theme";
+import ConfirmModal from "../../components/Ui/ConfirmModal";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface DoctorRequest {
@@ -154,9 +155,26 @@ const DoctorRequestsListPage: React.FC = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [search, setSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [statusFilter, setStatusFilter] = useState<string>("pending");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: "danger" | "warning" | "info";
+        onConfirm: () => void;
+        loading: boolean;
+    }>({
+        isOpen: false,
+        title: "",
+        message: "",
+        type: "info",
+        onConfirm: () => {},
+        loading: false
+    });
 
     const getInitials = (name?: string) => {
         if (!name) return "??";
@@ -198,7 +216,7 @@ const DoctorRequestsListPage: React.FC = () => {
                         createdAt: d.createdAt
                     }));
 
-                    // Local filtering to only show PENDING requests
+                    // Local filtering based on statusFilter ("pending" or "rejected")
                     let filtered = mappedData.filter((d) => {
                         const matchSearch =
                             !debouncedSearch ||
@@ -206,8 +224,7 @@ const DoctorRequestsListPage: React.FC = () => {
                             d.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
                             d.speciality.toLowerCase().includes(debouncedSearch.toLowerCase());
                         
-                        // Only show pending status as requested
-                        return matchSearch && d.status === "pending";
+                        return matchSearch && d.status === statusFilter;
                     });
 
                     const total = Math.ceil(filtered.length / LIMIT);
@@ -232,36 +249,62 @@ const DoctorRequestsListPage: React.FC = () => {
         fetchRequests(page);
     }, [page, fetchRequests]);
 
-    const handleAccept = async (id: string) => {
-        try {
-            const res = await adminService.approveDoctorRequest(id);
-            if (res.success) {
-                toast.success("Doctor request accepted successfully");
-                setRequests((prev) =>
-                    prev.map((r) => (r.id === id ? { ...r, status: "accepted" } : r))
-                );
-            } else {
-                toast.error(res.message || "Failed to accept doctor request");
+    const handleAccept = (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Approve Doctor?",
+            message: "Are you sure you want to approve this doctor? They will be notified and granted access to the platform.",
+            type: "info",
+            loading: false,
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, loading: true }));
+                try {
+                    const res = await adminService.approveDoctorRequest(id);
+                    if (res.success) {
+                        toast.success("Doctor request accepted successfully");
+                        setRequests((prev) =>
+                            prev.map((r) => (r.id === id ? { ...r, status: "approved" } : r))
+                        );
+                        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                    } else {
+                        toast.error(res.message || "Failed to accept doctor request");
+                    }
+                } catch {
+                    toast.error("Failed to accept doctor request");
+                } finally {
+                    setConfirmModal(prev => ({ ...prev, loading: false }));
+                }
             }
-        } catch {
-            toast.error("Failed to accept doctor request");
-        }
+        });
     };
 
-    const handleReject = async (id: string) => {
-        try {
-            const res = await adminService.rejectDoctorRequest(id, "Rejected by Admin");
-            if (res.success) {
-                toast.success("Doctor request rejected");
-                setRequests((prev) =>
-                    prev.map((r) => (r.id === id ? { ...r, status: "rejected" } : r))
-                );
-            } else {
-                toast.error(res.message || "Failed to reject doctor request");
+    const handleReject = (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Reject Doctor?",
+            message: "Are you sure you want to reject this doctor request? This action cannot be easily undone.",
+            type: "danger",
+            loading: false,
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, loading: true }));
+                try {
+                    const res = await adminService.rejectDoctorRequest(id, "Rejected by Admin");
+                    if (res.success) {
+                        toast.success("Doctor request rejected");
+                        setRequests((prev) =>
+                            prev.map((r) => (r.id === id ? { ...r, status: "rejected" } : r))
+                        );
+                        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                    } else {
+                        toast.error(res.message || "Failed to reject doctor request");
+                    }
+                } catch {
+                    toast.error("Failed to reject doctor request");
+                } finally {
+                    setConfirmModal(prev => ({ ...prev, loading: false }));
+                }
             }
-        } catch {
-            toast.error("Failed to reject doctor request");
-        }
+        });
     };
 
     const pagesToShow = useMemo(() => {
@@ -429,6 +472,34 @@ const DoctorRequestsListPage: React.FC = () => {
                                 backdropFilter: "blur(10px)",
                             }}
                         >
+                            {/* Tabs */}
+                            <div style={{ display: "flex", gap: "8px", background: "#f1f5f9", padding: "4px", borderRadius: "12px", flexWrap: "wrap" }}>
+                                <button
+                                    onClick={() => { setStatusFilter("pending"); setPage(1); }}
+                                    style={{
+                                        padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer",
+                                        background: statusFilter === "pending" ? "white" : "transparent",
+                                        color: statusFilter === "pending" ? t.blue : t.sub,
+                                        boxShadow: statusFilter === "pending" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                                        transition: "all 0.2s"
+                                    }}
+                                >
+                                    Pending Requests
+                                </button>
+                                <button
+                                    onClick={() => { setStatusFilter("rejected"); setPage(1); }}
+                                    style={{
+                                        padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 600, fontSize: "14px", cursor: "pointer",
+                                        background: statusFilter === "rejected" ? "white" : "transparent",
+                                        color: statusFilter === "rejected" ? "#f43f5e" : t.sub,
+                                        boxShadow: statusFilter === "rejected" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                                        transition: "all 0.2s"
+                                    }}
+                                >
+                                    Rejected
+                                </button>
+                            </div>
+
                             {/* Search */}
                             <div style={{ position: "relative", minWidth: "clamp(280px, 40%, 500px)", flex: 1 }}>
                                 <Search

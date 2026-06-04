@@ -55,17 +55,16 @@ class AuthService {
         return decoded.exp * 1000 < Date.now();
     }
 
-    saveToken(token: string): void {
-        localStorage.setItem('authToken', token)
+    saveToken(token: string, role: "patient" | "doctor" | "admin" = "patient"): void {
+        localStorage.setItem(`${role}Token`, token)
     }
 
-    getToken(): string | null {
-        return localStorage.getItem('authToken')
+    getToken(role: "patient" | "doctor" | "admin" = "patient"): string | null {
+        return localStorage.getItem(`${role}Token`)
     }
 
-    getCurrentUserInfo(): JwtPayload | null {
-        const token = this.getToken();
-        console.log(token, "token")
+    getCurrentUserInfo(role: "patient" | "doctor" | "admin" = "patient"): JwtPayload | null {
+        const token = this.getToken(role);
         if(!token)return null;
         const decoded = this.decodeToken<JwtPayload>(token);
         if(!decoded)return null;
@@ -77,8 +76,8 @@ class AuthService {
         } as JwtPayload;
     }
 
-    isAuthenticated(): boolean {
-        const token = this.getToken();
+    isAuthenticated(role: "patient" | "doctor" | "admin" = "patient"): boolean {
+        const token = this.getToken(role);
         return !!(token && !this._isTokenExpired(token));
     }
 
@@ -164,9 +163,9 @@ class AuthService {
         credentials
       );
       if (response.data?.data?.token) {
-        this.saveToken(response.data.data.token);
+        localStorage.setItem("doctorToken", response.data.data.token);
       } else if (response.data?.token) {
-        this.saveToken(response.data.token);
+        localStorage.setItem("doctorToken", response.data.token);
       }
       return response.data;
     } catch (error: unknown) {
@@ -217,9 +216,9 @@ class AuthService {
         credentials
       );
       if (response.data?.data?.token) {
-        this.saveToken(response.data.data.token);
+        localStorage.setItem("adminToken", response.data.data.token);
       } else if (response.data?.token) {
-        this.saveToken(response.data.token);
+        localStorage.setItem("adminToken", response.data.token);
       }
       return response.data;
     } catch (error: unknown) {
@@ -228,15 +227,17 @@ class AuthService {
   }
 
 
-  async logout() {
-    try {
-      await axiosInstance.get(AUTH_ROUTES.LOGOUT);
-    } catch (error) {
-      console.error("Logout failed", error);
-    } finally {
-      localStorage.removeItem("authToken");
+    async logout(role?: "patient" | "doctor" | "admin") {
+        try {
+            await axiosInstance.get(AUTH_ROUTES.LOGOUT);
+        } catch (error) {
+            console.error("Logout failed", error);
+        } finally {
+            if (role === "doctor") localStorage.removeItem("doctorToken");
+            else if (role === "admin") localStorage.removeItem("adminToken");
+            else localStorage.removeItem("patientToken");
+        }
     }
-  }
 
   getCurrentUser(): AuthUser | null {
     console.warn('getCurrentUser is deprecated. Use getCurrentUserInfo() instead.');

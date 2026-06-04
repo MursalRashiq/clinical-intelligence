@@ -4,7 +4,6 @@ import type { JsonTransformReturnType } from '../types/common';
 import { ROLES, GENDER } from '../constants/constants';
 import { IDGenerator } from '../utils/idGenerator.utils';
 
-
 const UserSchema = new Schema<IUserDocument>(
   {
     customId: {
@@ -42,7 +41,7 @@ const UserSchema = new Schema<IUserDocument>(
       type: String,
       enum: Object.values(ROLES),
       default: ROLES.PATIENT,
-      required: true
+      required: true,
     },
     gender: {
       type: String,
@@ -51,7 +50,7 @@ const UserSchema = new Schema<IUserDocument>(
     },
     dob: {
       type: Date,
-      default: null
+      default: null,
     },
     profileImage: {
       type: String,
@@ -88,7 +87,7 @@ const UserSchema = new Schema<IUserDocument>(
     favorite: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Doctor",
+        ref: 'Doctor',
       },
     ],
   },
@@ -98,7 +97,6 @@ const UserSchema = new Schema<IUserDocument>(
     toJSON: {
       virtuals: true,
       transform(_doc, ret: Record<string, unknown>): JsonTransformReturnType {
-
         const { _id, __v, passwordHash, ...cleanedRet } = ret;
 
         return {
@@ -108,27 +106,25 @@ const UserSchema = new Schema<IUserDocument>(
       },
     },
     toObject: { virtuals: true },
-  }    
+  },
 );
 
 UserSchema.index({ role: 1, isActive: 1 });
 
-UserSchema.pre('save',async function(){
+UserSchema.pre('save', async function () {
   if (this.isNew && !this.customId) {
     if (this.role === ROLES.PATIENT) {
-      this.customId = IDGenerator.generatePatientID()
+      this.customId = IDGenerator.generatePatientID();
     } else if (this.role === ROLES.DOCTOR) {
       this.customId = IDGenerator.generateDoctorID();
     } else if (this.role === ROLES.ADMIN) {
-
-      this.customId = IDGenerator.generatePatientID()
+      this.customId = IDGenerator.generatePatientID();
     }
   }
 });
 
-
 const UserModel: Model<IUserDocument> =
   (mongoose.models && (mongoose.models.User as Model<IUserDocument>)) ||
-  mongoose.model<IUserDocument>("User", UserSchema);
+  mongoose.model<IUserDocument>('User', UserSchema);
 
 export default UserModel;

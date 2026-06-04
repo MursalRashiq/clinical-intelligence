@@ -19,45 +19,50 @@ export default function VerifyOtp() {
   const email = location.state?.email || "jane@example.com";
   const role = location.state?.role || "patient";
 
-  // Calculate remaining seconds from a persisted expiry timestamp
   const getRemaining = () => {
     const expiry = sessionStorage.getItem(TIMER_KEY);
-    if (!expiry) return TIMER_DURATION;
-    const remaining = Math.round((Number(expiry) - Date.now()) / 1000);
-    return remaining > 0 ? remaining : 0;
+
+    if (!expiry || Number(expiry) <= Date.now()) {
+      const newExpiry = Date.now() + TIMER_DURATION * 1000;
+      sessionStorage.setItem(TIMER_KEY, String(newExpiry));
+      return TIMER_DURATION;
+    }
+
+    return Math.max(
+      0,
+      Math.floor((Number(expiry) - Date.now()) / 1000)
+    );
   };
 
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [seconds, setSeconds] = useState<number>(() => {
-    // Initialise from sessionStorage so refresh doesn't reset the timer
-    const remaining = getRemaining();
-    if (!sessionStorage.getItem(TIMER_KEY)) {
-      // First visit — set expiry now
-      sessionStorage.setItem(TIMER_KEY, String(Date.now() + TIMER_DURATION * 1000));
-    }
-    return remaining;
-  });
-  const [timerActive, setTimerActive] = useState(() => getRemaining() > 0);
+  const initialSeconds = getRemaining();
+  const [seconds, setSeconds] = useState<number>(initialSeconds);
+  const [timerActive, setTimerActive] = useState(initialSeconds > 0);
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Auto-focus first input on mount
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Countdown timer
-  useEffect(() => {
-    if (!timerActive) return;
-    if (seconds <= 0) {
-      setTimerActive(false);
-      return;
-    }
-    const id = setInterval(() => setSeconds((s) => s - 1), 1000);
-    return () => clearInterval(id);
-  }, [timerActive, seconds]);
+ useEffect(() => {
+  if (!timerActive) return;
+
+  const id = setInterval(() => {
+    setSeconds((prev) => {
+      if (prev <= 1) {
+        clearInterval(id);
+        setTimerActive(false);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(id);
+}, [timerActive]);
 
   const resetTimer = async () => {
     try {
@@ -106,7 +111,7 @@ export default function VerifyOtp() {
     setDigits(next);
     inputRefs.current[Math.min(text.length, OTP_LENGTH - 1)]?.focus();
   };
-
+    
   const verifyOtp = async () => {
     const code = digits.join("");
     setLoading(true);

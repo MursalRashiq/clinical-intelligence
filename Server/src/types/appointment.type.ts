@@ -1,0 +1,146 @@
+import { Document, Types } from 'mongoose';
+import { IUserDocument } from './user.type';
+import { IDoctorDocument } from './doctor.type';
+
+export type AppointmentType = 'video' | 'chat';
+
+export type AppointmentStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'completed'
+  | 'rejected'
+  | 'cancelled'
+  | 'upcoming'
+  | 'reschedule_requested';
+
+export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
+
+export type PaymentMethod = 'card' | 'upi' | 'wallet' | 'netbanking' | null;
+
+export type CancelledBy = 'patient' | 'doctor' | 'admin' | null;
+
+export interface IDoctorNote {
+  id: string;
+  title: string;
+  description?: string;
+  category?: 'observation' | 'diagnosis' | 'medicine' | 'lab_test';
+  dosage?: string;
+  frequency?: string;
+  duration?: string;
+  createdAt: Date;
+}
+
+export interface IAppointment {
+  customId?: string;
+
+  patientId: Types.ObjectId;
+  doctorId: Types.ObjectId;
+
+  appointmentType: AppointmentType;
+  appointmentDate: Date;
+  appointmentTime: string;
+  slotId?: string | null;
+  status: AppointmentStatus;
+  consultationFees: number;
+  adminCommission: number;
+  doctorEarnings: number;
+  reason?: string | null;
+  rescheduleCount?: number;
+
+  cancelledBy?: CancelledBy;
+  cancellationReason?: string | null;
+  cancelledAt?: Date | null;
+
+  rejectionReason?: string | null;
+  rescheduleRejectReason?: string | null;
+  rescheduleRequest?: {
+    appointmentDate: Date;
+    appointmentTime: string;
+    slotId?: string | null;
+  } | null;
+
+  paymentStatus: PaymentStatus;
+  paymentId?: string | null;
+  paymentMethod?: PaymentMethod;
+  razorpayOrderId?: string | null;
+
+  sessionStartTime?: Date | null;
+  sessionEndTime?: Date | null;
+  sessionDuration?: number | null;
+
+  doctorNotes?: IDoctorNote[] | null;
+  prescriptionUrl?: string | null;
+
+  sessionStatus?:
+    | 'idle'
+    | 'ACTIVE'
+    | 'WAITING_FOR_DOCTOR'
+    | 'CONTINUED_BY_DOCTOR'
+    | 'ENDED'
+    | 'TEST_NEEDED';
+  extensionCount?: number;
+
+  reminderSent?: boolean;
+  startNotificationSent?: boolean;
+
+  TEST_NEEDED?: boolean;
+
+  postConsultationChatWindow?: {
+    isActive: boolean;
+    expiresAt: Date | null;
+  };
+
+  activeCall?: {
+    sessionId: Types.ObjectId | null;
+    status: 'ACTIVE' | 'PAUSED' | 'ENDED' | null;
+    canRejoinUntil: Date | null;
+  };
+
+  checkoutLockUntil?: Date | null;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IAppointmentDocument extends IAppointment, Document {
+  _id: Types.ObjectId;
+  id: string;
+}
+
+export interface IAppointmentPopulated extends Omit<
+  IAppointment,
+  'patientId' | 'doctorId'
+> {
+  _id: Types.ObjectId | string;
+  id?: string;
+  patientId: {
+    _id: Types.ObjectId | string;
+    id?: string;
+    customId?: string;
+    name: string;
+    email: string;
+    phone?: string;
+    profileImage?: string;
+    userId?: string;
+    gender?: string;
+    dob?: Date;
+  };
+  doctorId: {
+    _id: Types.ObjectId | string;
+    id?: string;
+    customId?: string;
+    userId: IUserDocument;
+    specialty?: string;
+    experienceYears?: number;
+    VideoFees?: number;
+    ChatFees?: number;
+    user?: {
+      name: string;
+      email: string;
+      phone?: string;
+      profileImage?: string;
+    };
+  };
+  patient?: IUserDocument;
+  doctor?: IDoctorDocument;
+}

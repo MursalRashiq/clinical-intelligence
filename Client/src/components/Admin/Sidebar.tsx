@@ -21,6 +21,7 @@ import { FRONTEND_ROUTES } from "../../utils/constants";
 import { useDispatch } from "react-redux";
 import { logoutAdmin } from "../../redux/admin/adminSlice";
 import { adminService } from "../../services/AdminService";
+import ConfirmModal from "../Ui/ConfirmModal";
 
 interface SidebarProps {
   onMobileClose?: () => void;
@@ -31,7 +32,7 @@ const sidebarItems = [
   { label: "Doctor Request", icon: Zap, path: FRONTEND_ROUTES.ADMIN_DOCTOR_REQUESTS, hasNotification: true },
   { label: "Doctors", icon: Stethoscope, path: FRONTEND_ROUTES.ADMIN_DOCTORS },
   { label: "Patients", icon: Users, path: FRONTEND_ROUTES.ADMIN_PATIENTS },
-  { label: "Appointments", icon: Calendar, path: "/admin/appointments" },
+  { label: "Appointments", icon: Calendar, path: FRONTEND_ROUTES.ADMIN_APPOINTMENTS },
   { label: "Speciality", icon: Grid, path: "/admin/speciality" },
   { label: "Earnings", icon: DollarSign, path: "/admin/earnings" },
   { label: "Reviews", icon: Star, path: "/admin/reviews" },
@@ -40,8 +41,13 @@ const sidebarItems = [
 
 const Sidebar: React.FC<SidebarProps> = ({ onMobileClose }) => {
   const dispatch = useDispatch();
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
     try {
       await adminService.logoutAdmin();
       dispatch(logoutAdmin());
@@ -183,6 +189,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onMobileClose }) => {
           <span>Logout</span>
         </button>
       </div>
+
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+        title="Logout Confirmation"
+        message="Are you sure you want to log out of the admin panel?"
+        confirmText="Logout"
+        type="danger"
+      />
     </div>
   );
 };

@@ -1,13 +1,28 @@
-import { BaseUserResponseDTO, AuthResponseDTO, LoginDTO, RegisterDTO, VerifyOtpDTO, ResendOtpDTO, ForgotPasswordDTO, ResetPasswordDTO } from "../common.dto";
+import {
+  BaseUserResponseDTO,
+  AuthResponseDTO,
+  LoginDTO,
+  RegisterDTO,
+  VerifyOtpDTO,
+  ResendOtpDTO,
+  ForgotPasswordDTO,
+  ResetPasswordDTO,
+} from '../common.dto';
 
-export type { LoginDTO as LoginDoctorDTO, VerifyOtpDTO, ResendOtpDTO, ForgotPasswordDTO, RegisterDTO }
+export type {
+  LoginDTO as LoginDoctorDTO,
+  VerifyOtpDTO,
+  ResendOtpDTO,
+  ForgotPasswordDTO,
+  RegisterDTO,
+};
 
 export type RegisterDoctorDTO = RegisterDTO;
 
 export enum VerificationStatus {
-    Pending = "pending",
-    Approved= "approved",
-    Reject = "rejected"
+  Pending = 'pending',
+  Approved = 'approved',
+  Reject = 'rejected',
 }
 
 export interface SubmitVerificationDTO {
@@ -23,7 +38,7 @@ export interface SubmitVerificationDTO {
 export interface DoctorResponseDTO extends BaseUserResponseDTO {
   gender?: string | null;
   dob?: string | null;
-  verificationStatus: VerificationStatus
+  verificationStatus: VerificationStatus;
   rejectionReason?: string | null | undefined;
   licenseNumber?: string | null | undefined;
   qualifications: string[];
@@ -34,6 +49,21 @@ export interface DoctorResponseDTO extends BaseUserResponseDTO {
   languages: string[];
   ratingAvg: number;
   ratingCount: number;
+}
+
+export interface DoctorListResponseDTO extends BaseUserResponseDTO {
+  id: string;
+  name: string;
+  image: string;
+  speciality: string;
+  experience: number;
+  gender: string;
+  fees: number;
+  location: string;
+  rating: number;
+  reviews: number;
+  available: boolean;
+  customId: string;
 }
 
 export type DoctorAuthResponseDTO = AuthResponseDTO<DoctorResponseDTO>;

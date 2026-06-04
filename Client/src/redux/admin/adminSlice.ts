@@ -1,31 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-export interface UserProfile {
-    _id?: string;
-    id?: string;
-    name: string;
-    email: string;
-    phone?: string;
-    role: 'patient' | 'doctor' | 'admin';
-    profileImage?: string;
-    specialty?: string;
-    department?: string;
-    experience?: number;
-    consultationFee?: number;
-    bio?: string;
-    customId?: string;
-    address?: {
-        street?: string;
-        city?: string;
-        state?: string;
-        country?: string;
-        pinCode?: string;
-    };
-    isVerified?: boolean;
-    createdAt?: string;
-    updatedAt?: string;
-    doctorProfileId?: string;
-}
+import type { UserProfile } from "../../types/user.type";
 
 interface AdminState {
     currentAdmin: UserProfile | null;

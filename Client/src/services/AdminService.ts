@@ -37,7 +37,7 @@ export class AdminServiceClass {
         }
     }
 
-    async getAllDoctors(page: number = 1, limit: number = 10, filters: { search?: string; isActive?: boolean | string; specialty?: string } = {}) {
+    async getAllDoctors(page: number = 1, limit: number = 10, filters: { search?: string; isActive?: boolean | string; specialty?: string; verificationStatus?: string } = {}) {
         try {
             const res = await axiosInstance.get(ADMIN_API_ROUTES.GET_DOCTORS, {
                 params: {

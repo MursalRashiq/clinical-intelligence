@@ -17,6 +17,7 @@ import {
 import Sidebar from "../../components/Admin/Sidebar";
 import TopNav from "../../components/Admin/TopNav";
 import { theme as t } from "../../theme";
+import ConfirmModal from "../../components/Ui/ConfirmModal";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface DoctorRequest {
@@ -282,6 +283,7 @@ const DoctorRequestDetails = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejecting, setRejecting] = useState(false);
+  const [showAcceptConfirm, setShowAcceptConfirm] = useState(false);
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -321,12 +323,17 @@ const DoctorRequestDetails = () => {
     fetchDoctor();
   }, [id, navigate]);
 
-  const handleAccept = async () => {
+  const handleAccept = () => {
+    setShowAcceptConfirm(true);
+  };
+
+  const confirmAccept = async () => {
     if (!id) return;
     try {
       const res = await adminService.approveDoctorRequest(id);
       if (res.success) {
         toast.success("Doctor request accepted!");
+        setShowAcceptConfirm(false);
         navigate(FRONTEND_ROUTES.ADMIN_DOCTOR_REQUESTS);
       } else {
         toast.error(res.message || "Failed to accept doctor request");
@@ -892,6 +899,16 @@ const DoctorRequestDetails = () => {
         body { margin: 0; }
         * { box-sizing: border-box; }
       `}</style>
+
+      <ConfirmModal
+        isOpen={showAcceptConfirm}
+        onClose={() => setShowAcceptConfirm(false)}
+        onConfirm={confirmAccept}
+        title="Approve Doctor?"
+        message={`Are you sure you want to approve Dr. ${doctor?.name}? This will grant them access to the platform.`}
+        confirmText="Approve"
+        type="info"
+      />
     </div>
   );
 };

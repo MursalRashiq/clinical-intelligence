@@ -1,106 +1,122 @@
-import nodemailer, { Transporter } from "nodemailer";
+import nodemailer, { Transporter } from 'nodemailer';
 import { env } from '../config/env';
-import type { IEmailService  } from "./interface/IEmailService";
-import type { EmailConfig, SmtpConfig } from "../types/email.type";
+import type { IEmailService } from './interface/IEmailService';
+import type { EmailConfig, SmtpConfig } from '../types/email.type';
 import { CONFIG, HttpStatus, MESSAGES } from '../constants/constants';
 import { AppError } from '../errors/AppError';
-import { ILoggerService } from "./interface/ILogger.service";
+import { ILoggerService } from './interface/ILogger.service';
 
 export class EmailService implements IEmailService {
-    private _trasporter: Transporter;
-    private readonly _fromAddress: string;
+  private _trasporter: Transporter;
+  private readonly _fromAddress: string;
 
-    constructor(private _logger: ILoggerService, config?: SmtpConfig) {
-        const emailConfig = config || this._getDefaultConfig();
+  constructor(
+    private _logger: ILoggerService,
+    config?: SmtpConfig,
+  ) {
+    const emailConfig = config || this._getDefaultConfig();
 
-        this._trasporter = nodemailer.createTransport(emailConfig);
-        this._fromAddress = `"Clinical Intelligence" <${env.SMTP_USER}`;
-        
-        this._verifyConnection();
+    this._trasporter = nodemailer.createTransport(emailConfig);
+    this._fromAddress = `"Clinical Intelligence" <${env.SMTP_USER}`;
+
+    this._verifyConnection();
+  }
+
+  private _getDefaultConfig(): SmtpConfig {
+    const emailUser = env.SMTP_USER;
+    const emailPass = env.SMTP_PASS;
+    const emailHost = env.SMTP_HOST;
+    const emailPort = Number(env.SMTP_PORT) || 587;
+
+    if (!emailUser || !emailPass) {
+      throw new AppError(
+        MESSAGES.EMAIL_CREDENTIALS_NOT_CONFIGURED,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
-    private _getDefaultConfig(): SmtpConfig {
-        const emailUser = env.SMTP_USER;
-        const emailPass = env.SMTP_PASS;
-        const emailHost = env.SMTP_HOST;
-        const emailPort = Number(env.SMTP_PORT) || 587;
-
-        if (!emailUser || !emailPass ) {
-            throw new AppError(MESSAGES.EMAIL_CREDENTIALS_NOT_CONFIGURED, HttpStatus.INTERNAL_SERVER_ERROR)
-        }
-
-        return {
-            host: emailHost,
-            port: emailPort,
-            secure: emailPort === 465,
-            auth: {
-                user: emailUser,
-                pass: emailPass,
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-        };
+    return {
+      host: emailHost,
+      port: emailPort,
+      secure: emailPort === 465,
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
     };
+  }
 
-    private async _verifyConnection(): Promise<void> {
-        try {
-            await this._trasporter.verify();
-            this._logger.info("Email server is ready");
-        } catch ( error: unknown ){
-            this._logger.error("Email server connection failed", error);
-        }
+  private async _verifyConnection(): Promise<void> {
+    try {
+      await this._trasporter.verify();
+      this._logger.info('Email server is ready');
+    } catch (error: unknown) {
+      this._logger.error('Email server connection failed', error);
     }
+  }
 
-    async sendOtpEmail(email: string, name: string, otp: string): Promise<void> {
-        try {
-            const html = this._getOTPTemplate(otp, name);
-            
-            const mailOptions = {
-                from: this._fromAddress,
-                to: email,
-                subject: "Your OTP for Registration - Clinical intelligence",
-                html,
-            };
+  async sendOtpEmail(email: string, name: string, otp: string): Promise<void> {
+    try {
+      const html = this._getOTPTemplate(otp, name);
 
-            const info = await this._trasporter.sendMail(mailOptions);
-            this._logger.info("OTP email sent successfully", { messageId: info.messageId });
-        } catch (error: unknown ){
-            this._logger.error("OTP email sending failed", error);
-            const errorMessage = error instanceof Error ? error.message : String(error);
+      const mailOptions = {
+        from: this._fromAddress,
+        to: email,
+        subject: 'Your OTP for Registration - Clinical intelligence',
+        html,
+      };
 
-            throw new AppError(
-                MESSAGES.EMAIL_SEND_FAILED.replace("{error}", errorMessage),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
-        }
+      const info = await this._trasporter.sendMail(mailOptions);
+      this._logger.info('OTP email sent successfully', {
+        messageId: info.messageId,
+      });
+    } catch (error: unknown) {
+      this._logger.error('OTP email sending failed', error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      throw new AppError(
+        MESSAGES.EMAIL_SEND_FAILED.replace('{error}', errorMessage),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
+  }
 
-    async sendPasswordResetEmail(email: string, name: string, otp: string): Promise<void> {
-      try {
-        const html = this._getPasswordResetTemplate(otp, name);
+  async sendPasswordResetEmail(
+    email: string,
+    name: string,
+    otp: string,
+  ): Promise<void> {
+    try {
+      const html = this._getPasswordResetTemplate(otp, name);
 
-        const mailOptions = {
-          from: this._fromAddress,
-          to: email,
-          subject: "Password Reset OTP - Clinical-intelligence",
-          html,
-        };
+      const mailOptions = {
+        from: this._fromAddress,
+        to: email,
+        subject: 'Password Reset OTP - Clinical-intelligence',
+        html,
+      };
 
-        const info = await this._trasporter.sendMail(mailOptions);
-        this._logger.info("Password reset email sent successfully", { messageId: info.messageId });
-      } catch (error: unknown) {
-          this._logger.error("Password reset email sending failed", error);
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          throw new AppError(
-            MESSAGES.EMAIL_SEND_FAILED.replace("{error}", errorMessage),
-            HttpStatus.INTERNAL_SERVER_ERROR
-          );
-      }
+      const info = await this._trasporter.sendMail(mailOptions);
+      this._logger.info('Password reset email sent successfully', {
+        messageId: info.messageId,
+      });
+    } catch (error: unknown) {
+      this._logger.error('Password reset email sending failed', error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new AppError(
+        MESSAGES.EMAIL_SEND_FAILED.replace('{error}', errorMessage),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
+  }
 
-    private _getOTPTemplate(otp: string, name: string): string {
-    const expiryText = `${CONFIG.OTP_EXPIRY_TIME} minute${CONFIG.OTP_EXPIRY_TIME === 1 ? "" : "s"}`;
+  private _getOTPTemplate(otp: string, name: string): string {
+    const expiryText = `${CONFIG.OTP_EXPIRY_TIME} minute${CONFIG.OTP_EXPIRY_TIME === 1 ? '' : 's'}`;
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 10px;">
         <div style="background-color: #1560e8; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
@@ -141,9 +157,8 @@ export class EmailService implements IEmailService {
     `;
   }
 
-
-   private _getPasswordResetTemplate(otp: string, name: string): string {
-    const expiryText = `${CONFIG.OTP_EXPIRY_TIME} minute${CONFIG.OTP_EXPIRY_TIME === 1 ? "" : "s"}`;
+  private _getPasswordResetTemplate(otp: string, name: string): string {
+    const expiryText = `${CONFIG.OTP_EXPIRY_TIME} minute${CONFIG.OTP_EXPIRY_TIME === 1 ? '' : 's'}`;
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb; border-radius: 10px;">
         <div style="background-color: #1560e8; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
@@ -187,4 +202,3 @@ export class EmailService implements IEmailService {
     `;
   }
 }
-

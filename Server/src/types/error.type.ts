@@ -1,1 +1,1 @@
-export { AppError } from "../errors/AppError";
+export { AppError } from '../errors/AppError';

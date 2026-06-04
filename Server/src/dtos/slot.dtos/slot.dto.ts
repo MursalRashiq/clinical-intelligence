@@ -1,69 +1,84 @@
-import { DayOfWeek, ITimeSlot, IBlockedDate } from "../../types/slot.type";
-
+import {
+  DayOfWeek,
+  ITimeSlot,
+  IBlockedDate,
+  ISpecificDateSlot,
+} from '../../types/slot.type';
 
 export interface CreateScheduleDTO {
-    doctorId: string;
-    weeklySchedule: {
-        day: DayOfWeek;
-        enabled: boolean;
-        slots: ITimeSlot[];
-    }[];
-    defaultSlotDuration?: number;
-    bufferTime?: number;
-    maxPatientsPerSlot?: number;
+  doctorId: string;
+  weeklySchedule: {
+    day: DayOfWeek;
+    enabled: boolean;
+    slots: ITimeSlot[];
+  }[];
+  defaultSlotDuration?: number;
+  startDate?: Date | string;
+  endDate?: Date | string;
+  bufferTime?: number;
+  maxPatientsPerSlot?: number;
 }
 
 export interface UpdateScheduleDTO {
-    weeklySchedule?: {
-        day: DayOfWeek;
-        enabled: boolean;
-        slots: ITimeSlot[];
-    }[];
-    defaultSlotDuration?: number;
-    bufferTime?: number;
-    maxPatientsPerSlot?: number;
-    isActive?: boolean;
+  weeklySchedule?: {
+    day: DayOfWeek;
+    enabled: boolean;
+    slots: ITimeSlot[];
+  }[];
+  defaultSlotDuration?: number;
+  startDate?: Date | string;
+  endDate?: Date | string;
+  bufferTime?: number;
+  maxPatientsPerSlot?: number;
+  isActive?: boolean;
 }
 
 export interface BlockDatesDTO {
-    date: Date | string;
-    reason?: string;
-    slots?: string[];
+  date: Date | string;
+  reason?: string;
+  slots?: string[];
 }
 
 export interface UnblockDateDTO {
-    date: Date | string;
+  date: Date | string;
 }
 
 export interface GetAvailableSlotsDTO {
-    doctorId: string;
-    date: Date | string;
+  doctorId: string;
+  date: Date | string;
 }
 
+export interface SpecificDateSlotsDTO {
+  date: Date | string;
+  startTime: string;
+  endTime: string;
+  skipOverlappingDays?: boolean;
+}
 
 export interface ScheduleResponseDTO {
-    id: string;
-    doctorId: string;
-    weeklySchedule: {
-        day: DayOfWeek;
-        enabled: boolean;
-        slots: ITimeSlot[];
-    }[];
-    blockedDates: IBlockedDate[];
-    defaultSlotDuration: number;
-    bufferTime: number;
-    maxPatientsPerSlot: number;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+  id: string;
+  doctorId: string;
+  weeklySchedule: {
+    day: DayOfWeek;
+    enabled: boolean;
+    slots: ITimeSlot[];
+  }[];
+  specificDateSlots?: ISpecificDateSlot[];
+  blockedDates: IBlockedDate[];
+  defaultSlotDuration: number;
+  bufferTime: number;
+  maxPatientsPerSlot: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AvailableSlotResponseDTO {
-    date: Date;
-    startTime: string;
-    endTime: string;
-    isAvailable: boolean;
-    bookedCount: number;
-    maxPatients: number;
-    slotId?: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  bookedCount: number;
+  maxPatients: number;
+  slotId?: string;
 }

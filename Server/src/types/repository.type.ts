@@ -1,5 +1,8 @@
-import { Document } from "mongoose";
+import { Document } from 'mongoose';
 
 export interface StatusToggleRepository {
-    updateById(id: string, update: { isActive: boolean }): Promise<Document | null>;
+  updateById(
+    id: string,
+    update: { isActive: boolean },
+  ): Promise<Document | null>;
 }
